@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习资源包 - AI智能体：构建APEC知识助手 | 第5课时</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #f0f5f3;
+  color: #333;
+  min-height: 100vh;
+  line-height: 1.8;
+}
+
+/* ===== Header ===== */
+.header {
+  background: linear-gradient(135deg, #0F6E56, #14a085);
+  color: white;
+  padding: 28px 30px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(15,110,86,0.3);
+}
+.header h1 { font-size: 24px; margin-bottom: 6px; }
+.header .subtitle { font-size: 14px; opacity: 0.85; }
+
+/* ===== Nav ===== */
+.nav-bar {
+  background: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-bar a {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  text-decoration: none;
+  color: #0F6E56;
+  background: #f0f5f3;
+  transition: all 0.2s;
+}
+.nav-bar a:hover { background: #14a085; color: white; }
+
+/* ===== Container ===== */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* ===== Section ===== */
+.section {
+  background: white;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  overflow: hidden;
+  scroll-margin-top: 60px;
+}
+.section-header {
+  background: linear-gradient(135deg, #0F6E56, #14a085);
+  color: white;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-icon {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: bold;
+  flex-shrink: 0;
+}
+.section-title { font-size: 17px; font-weight: bold; }
+.section-body { padding: 20px 24px; }
+
+/* ===== Info Cards ===== */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.info-card {
+  background: #f8f9fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 16px;
+  transition: box-shadow 0.2s;
+}
+.info-card:hover { box-shadow: 0 2px 12px rgba(15,110,86,0.1); }
+.info-card h4 {
+  color: #0F6E56;
+  font-size: 15px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.info-card p, .info-card ul { font-size: 13px; color: #555; line-height: 1.8; }
+.info-card ul { padding-left: 16px; }
+.info-card .highlight { color: #0F6E56; font-weight: bold; }
+
+/* ===== Three Elements ===== */
+.elements-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.element-card {
+  border-radius: 12px;
+  padding: 18px 16px;
+  text-align: center;
+  color: white;
+}
+.element-card .el-icon { font-size: 28px; margin-bottom: 8px; }
+.element-card .el-title { font-size: 16px; font-weight: bold; margin-bottom: 6px; }
+.element-card .el-desc { font-size: 12px; opacity: 0.9; line-height: 1.6; }
+.element-card .el-role {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.3);
+  font-size: 12px;
+  font-weight: bold;
+}
+.el-role-text { font-size: 11px; opacity: 0.85; font-weight: normal; }
+.el-1 { background: linear-gradient(135deg, #3498db, #2980b9); }
+.el-2 { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+.el-3 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+
+/* ===== Steps Flow ===== */
+.steps-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.step-item {
+  background: #e8f5f0;
+  border: 2px solid #14a085;
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  flex: 1;
+  min-width: 120px;
+}
+.step-num {
+  width: 24px; height: 24px;
+  background: #0F6E56;
+  color: white;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  font-size: 13px; font-weight: bold;
+  margin-bottom: 4px;
+}
+.step-text { font-size: 13px; color: #0F6E56; font-weight: bold; }
+.step-detail { font-size: 11px; color: #777; margin-top: 2px; }
+.arrow { color: #14a085; font-size: 20px; font-weight: bold; }
+
+/* ===== Compare Table ===== */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.compare-table th {
+  background: #f0f5f3;
+  padding: 10px 14px;
+  text-align: center;
+  border-bottom: 2px solid #14a085;
+  color: #0F6E56;
+}
+.compare-table th:first-child { text-align: left; }
+.compare-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e8e8e8;
+  text-align: center;
+}
+.compare-table td:first-child {
+  text-align: left;
+  font-weight: bold;
+  color: #0F6E56;
+}
+.compare-table .col-ai { background: #fef9e7; }
+.compare-table .col-agent { background: #e8f5f0; }
+
+/* ===== Code Block ===== */
+.code-block {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  margin-bottom: 14px;
+  position: relative;
+  overflow-x: auto;
+}
+.code-block .keyword { color: #569cd6; }
+.code-block .string { color: #ce9178; }
+.code-block .comment { color: #6a9955; }
+.code-block .placeholder { color: #f92672; }
+.code-block .label { color: #66d9ef; }
+.copy-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  color: #ddd;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.25); color: white; }
+.copy-btn.copied { background: #27ae60; border-color: #27ae60; color: white; }
+
+/* ===== Rules Table ===== */
+.rules-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.rules-table th {
+  background: #f0f5f3;
+  color: #0F6E56;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid #14a085;
+}
+.rules-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e8e8e8;
+}
+.rule-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  white-space: nowrap;
+}
+
+/* ===== Governance Cards ===== */
+.gov-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.gov-card {
+  background: #f8f9fa;
+  border-left: 4px solid #14a085;
+  border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+}
+.gov-card h4 { color: #0F6E56; font-size: 14px; margin-bottom: 6px; }
+.gov-card p { font-size: 13px; color: #555; line-height: 1.7; }
+
+/* ===== Analogy Box ===== */
+.analogy-box {
+  background: linear-gradient(135deg, #e8f5f0, #d4edda);
+  border: 2px solid #14a085;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+.analogy-box h4 {
+  color: #0F6E56;
+  font-size: 15px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.analogy-box table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.analogy-box th {
+  background: rgba(15,110,86,0.1);
+  padding: 8px 12px;
+  text-align: center;
+  border-radius: 6px;
+  color: #0F6E56;
+}
+.analogy-box td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid rgba(15,110,86,0.1);
+}
+.analogy-box td:first-child { font-weight: bold; color: #0F6E56; text-align: left; }
+
+/* ===== Tip Box ===== */
+.tip-box {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #856404;
+  margin-bottom: 14px;
+}
+.tip-box strong { color: #c09000; }
+
+/* ===== Platform Guide ===== */
+.platform-guide {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.platform-guide h4 { color: #0F6E56; font-size: 15px; margin-bottom: 10px; }
+.platform-guide ol { padding-left: 20px; }
+.platform-guide ol li { font-size: 14px; color: #555; line-height: 2; margin-bottom: 4px; }
+.platform-guide ol li strong { color: #0F6E56; }
+
+/* ===== Links ===== */
+.links-list {
+  list-style: none;
+  padding: 0;
+}
+.links-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.links-list li:last-child { border-bottom: none; }
+.links-list a {
+  color: #14a085;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+.links-list a:hover { color: #0F6E56; text-decoration: underline; }
+.links-list .link-desc { font-size: 13px; color: #999; margin-top: 2px; }
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .header h1 { font-size: 20px; }
+  .container { padding: 16px 10px 40px; }
+  .section-body { padding: 16px 14px; }
+  .elements-row { grid-template-columns: 1fr; }
+  .steps-flow { flex-direction: column; }
+  .arrow { transform: rotate(90deg); }
+  .nav-bar { gap: 4px; }
+  .nav-bar a { font-size: 12px; padding: 4px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>学习资源包 · AI智能体：构建APEC知识助手</h1>
+  <p class="subtitle">第5课时 · 课前预习 / 课中参考 / 课后复习 全程可用</p>
+</div>
+
+<!-- Nav Bar -->
+<div class="nav-bar">
+  <a href="#sec1">智能体概念</a>
+  <a href="#sec2">三要素详解</a>
+  <a href="#sec3">创建六步</a>
+  <a href="#sec4">Prompt模板</a>
+  <a href="#sec5">规则清单</a>
+  <a href="#sec6">迭代优化</a>
+  <a href="#sec7">AI治理</a>
+  <a href="#sec8">平台操作</a>
+  <a href="#sec9">APEC速查</a>
+</div>
+
+<div class="container">
+
+  <!-- ===== Section 1: Agent Concept ===== -->
+  <div class="section" id="sec1">
+    <div class="section-header">
+      <div class="section-icon">1</div>
+      <div class="section-title">什么是智能体？与普通AI对话有什么区别？</div>
+    </div>
+    <div class="section-body">
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>智能体定义</h4>
+          <p>智能体是能<span class="highlight">感知环境、自主决策、执行行动</span>的AI系统。它比普通AI对话更专业、更专注，因为它有明确的角色、专属的知识和严格的规则。</p>
+        </div>
+        <div class="info-card">
+          <h4>生活中的智能体</h4>
+          <ul>
+            <li><strong>Siri / 小爱同学</strong>：语音助手智能体</li>
+            <li><strong>淘宝客服机器人</strong>：智能客服智能体</li>
+            <li><strong>抖音推荐</strong>：推荐系统智能体</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 style="color:#0F6E56;font-size:15px;margin-bottom:10px">普通AI对话 vs 智能体 对比</h4>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>对比维度</th>
+            <th class="col-ai">普通AI对话</th>
+            <th class="col-agent">智能体</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>角色</td>
+            <td>通用助手，没有特定身份</td>
+            <td>有明确角色设定（如APEC知识助手）</td>
+          </tr>
+          <tr>
+            <td>知识</td>
+            <td>依赖训练数据，可能过时或不准</td>
+            <td>有专属知识库，信息准确可控</td>
+          </tr>
+          <tr>
+            <td>规则</td>
+            <td>没有定制化的回答规则</td>
+            <td>有对话规则约束（长度、风格、安全边界）</td>
+          </tr>
+          <tr>
+            <td>专业度</td>
+            <td>回答可能笼统，可能跑题</td>
+            <td>回答专业、精准、聚焦特定领域</td>
+          </tr>
+          <tr>
+            <td>可控性</td>
+            <td>行为不可控，可能编造信息</td>
+            <td>规则约束行为，不确定时能诚实说"不知道"</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>一句话总结：</strong>智能体 = 普通 AI + 角色设定 + 知识库 + 对话规则。三要素缺一不可，让AI从"什么都能聊"变成"某个领域的专家"。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Section 2: Three Elements ===== -->
+  <div class="section" id="sec2">
+    <div class="section-header">
+      <div class="section-icon">2</div>
+      <div class="section-title">智能体三要素详解</div>
+    </div>
+    <div class="section-body">
+
+      <div class="analogy-box">
+        <h4>类比：招聘一个APEC讲解员，你要告诉他三件事</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>三要素</th>
+              <th>招聘讲解员类比</th>
+              <th>在平台上的配置项</th>
+              <th>作用</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>角色设定</td>
+              <td>你是谁</td>
+              <td>角色Prompt输入框</td>
+              <td>决定"人格"和风格</td>
+            </tr>
+            <tr>
+              <td>知识库</td>
+              <td>你知道什么</td>
+              <td>知识库上传/文本输入</td>
+              <td>决定"能力边界"</td>
+            </tr>
+            <tr>
+              <td>对话规则</td>
+              <td>你怎么回答</td>
+              <td>规则/约束设置</td>
+              <td>决定"行为准则"</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="elements-row">
+        <div class="element-card el-1">
+          <div class="el-icon">A</div>
+          <div class="el-title">角色设定</div>
+          <div class="el-desc">你是谁？什么性格？什么身份？</div>
+          <div class="el-role">决定风格<div class="el-role-text">改成"冷漠机器人"→回答语气马上变了</div></div>
+        </div>
+        <div class="element-card el-2">
+          <div class="el-icon">B</div>
+          <div class="el-title">知识库</div>
+          <div class="el-desc">你知道什么？学过什么？</div>
+          <div class="el-role">决定能力边界<div class="el-role-text">知识库里没有的信息→答不出来</div></div>
+        </div>
+        <div class="element-card el-3">
+          <div class="el-icon">C</div>
+          <div class="el-title">对话规则</div>
+          <div class="el-desc">怎么说话？多长？什么不能说？</div>
+          <div class="el-role">决定行为准则<div class="el-role-text">规则越精确→智能体越可靠</div></div>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>关键理解：</strong>三要素不是独立的三块，而是配合工作的整体。角色决定"你是谁"，知识库决定"你能答什么"，规则决定"你怎么答"。三者共同决定了智能体的质量。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Section 3: Six Steps ===== -->
+  <div class="section" id="sec3">
+    <div class="section-header">
+      <div class="section-icon">3</div>
+      <div class="section-title">创建智能体六步走</div>
+    </div>
+    <div class="section-body">
+
+      <div class="steps-flow">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text">新建智能体</div>
+          <div class="step-detail">取个名字</div>
+        </div>
+        <span class="arrow">→</span>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text">填写角色设定</div>
+          <div class="step-detail">参考Prompt模板</div>
+        </div>
+        <span class="arrow">→</span>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text">编写对话规则</div>
+          <div class="step-detail">至少3条</div>
+        </div>
+        <span class="arrow">→</span>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-text">配置知识库</div>
+          <div class="step-detail">输入APEC信息</div>
+        </div>
+        <span class="arrow">→</span>
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-text">设置开场白</div>
+          <div class="step-detail">友好问候</div>
+        </div>
+        <span class="arrow">→</span>
+        <div class="step-item">
+          <div class="step-num">6</div>
+          <div class="step-text">发布并测试</div>
+          <div class="step-detail">问它几个问题</div>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>温馨提示：</strong>第2步"角色设定"参考第4节Prompt模板，第3步"规则"参考第5节规则清单，第4步"知识库"参考第9节APEC速查。不用从零开始写！
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Section 4: Prompt Template ===== -->
+  <div class="section" id="sec4">
+    <div class="section-header">
+      <div class="section-icon">4</div>
+      <div class="section-title">角色Prompt模板（可复制）</div>
+    </div>
+    <div class="section-body">
+
+      <p style="font-size:14px;color:#555;margin-bottom:14px">回忆第1课的"Prompt三要素：角色+任务+约束"——智能体的角色Prompt本质就是<strong style="color:#0F6E56">结构化的Prompt</strong>。下方模板可直接复制使用。</p>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<span class="comment">// ===== APEC知识助手 角色Prompt 模板 =====</span>
+
+<span class="label">你是</span><span class="placeholder">[智能体名称]</span>，<span class="placeholder">[身份描述]</span>。
+你的性格<span class="placeholder">[性格特点]</span>，像一个<span class="placeholder">[类比角色]</span>。
+
+你了解<span class="placeholder">[知识领域1]</span>、<span class="placeholder">[知识领域2]</span>、<span class="placeholder">[知识领域3]</span>。
+
+回答规则：
+1. <span class="placeholder">[规则1]</span>
+2. <span class="placeholder">[规则2]</span>
+3. <span class="placeholder">[规则3]</span>
+4. <span class="placeholder">[规则4]</span>
+
+开场白：<span class="placeholder">[友好问候，说明你的功能]</span>
+      </div>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<span class="comment">// ===== 完整示例：APEC小亚 =====</span>
+
+你是小亚，2026年深圳APEC峰会的官方知识助手。
+你的性格热情、专业、耐心，像一个博学的导游。
+
+你了解APEC的基本信息（21个成员、成立时间、宗旨）、
+2026年深圳APEC主题和三大优先领域、深圳为什么被选为举办城市。
+
+回答规则：
+1. 用初中生能听懂的语言回答
+2. 回答控制在200字以内
+3. 不确定的信息，诚实说"我还不确定这个信息"
+4. 回答后主动问用户是否还有其他问题
+
+开场白：你好！我是小亚，2026年深圳APEC峰会的知识助手。
+想了解APEC什么都可以问我哦！
+      </div>
+
+      <div class="tip-box">
+        <strong>填写技巧：</strong>方括号 <code style="background:#1e1e1e;color:#f92672;padding:2px 6px;border-radius:4px;">[...]</code> 里的内容需要你替换成自己的。角色越具体，智能体"人格"越鲜明；规则越精确，智能体表现越好。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Section 5: Rules Reference ===== -->
+  <div class="section" id="sec5">
+    <div class="section-header">
+      <div class="section-icon">5</div>
+      <div class="section-title">对话规则参考清单</div>
+    </div>
+    <div class="section-body">
+
+      <p style="font-size:14px;color:#555;margin-bottom:14px">编写规则时参考此清单。<strong style="color:#e74c3c">"好好回答"这种空话不算规则</strong>——规则要<strong style="color:#0F6E56">具体、能检查</strong>。</p>
+
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th style="width:15%">规则类别</th>
+            <th style="width:45%">规则示例（可直接抄用）</th>
+            <th style="width:40%">解决的问题</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="rule-tag" style="background:#3498db">语言风格</span></td>
+            <td>用初中生能听懂的语言回答，避免过于专业的术语</td>
+            <td>回答太专业、看不懂</td>
+          </tr>
+          <tr>
+            <td><span class="rule-tag" style="background:#9b59b6">回答长度</span></td>
+            <td>回答控制在200字以内，重点突出</td>
+            <td>回答太长、没有重点</td>
+          </tr>
+          <tr>
+            <td><span class="rule-tag" style="background:#e74c3c">诚实性</span></td>
+            <td>不确定的信息，诚实说"我还不确定这个信息"</td>
+            <td>AI编造信息 / 幻觉</td>
+          </tr>
+          <tr>
+            <td><span class="rule-tag" style="background:#f39c12">互动性</span></td>
+            <td>每次回答后主动问用户是否还有其他问题</td>
+            <td>对话不连贯、不够友好</td>
+          </tr>
+          <tr>
+            <td><span class="rule-tag" style="background:#1abc9c">数据引用</span></td>
+            <td>回答数据问题时，附带说明数据来源</td>
+            <td>数据来源不明、可信度低</td>
+          </tr>
+          <tr>
+            <td><span class="rule-tag" style="background:#e67e22">安全边界</span></td>
+            <td>不回答与APEC无关的问题，礼貌引导用户回到APEC话题</td>
+            <td>智能体偏离主题</td>
+          </tr>
+          <tr>
+            <td><span class="rule-tag" style="background:#2c3e50">格式规范</span></td>
+            <td>列举信息时使用序号或项目符号，让回答更清晰</td>
+            <td>回答格式混乱</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>选择建议：</strong>基础版至少选3条规则（推荐：语言风格 + 回答长度 + 诚实性）。进阶版选5条以上，加上数据引用和安全边界。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Section 6: Iteration ===== -->
+  <div class="section" id="sec6">
+    <div class="section-header">
+      <div class="section-icon">6</div>
+      <div class="section-title">迭代优化方法指导</div>
+    </div>
+    <div class="section-body">
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>什么是迭代？</h4>
+          <p>迭代 = <span class="highlight">测试 → 发现问题 → 改规则 → 再测试</span> 的循环。每转一圈，智能体更强一点。这是智能体开发的核心能力——<strong>系统设计思维</strong>。</p>
+        </div>
+        <div class="info-card">
+          <h4>为什么要迭代？</h4>
+          <p>第一版智能体几乎不可能完美。<span class="highlight">规则越精确，智能体表现越好。只有通过测试发现问题、针对性修改，才能让智能体越来越好。</span></p>
+        </div>
+      </div>
+
+      <h4 style="color:#0F6E56;font-size:15px;margin-bottom:10px">迭代循环四步</h4>
+      <div class="steps-flow">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text">发布测试</div>
+          <div class="step-detail">问智能体3个问题</div>
+        </div>
+        <span class="arrow">→</span>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text">发现问题</div>
+          <div class="step-detail">什么回答不满意？</div>
+        </div>
+        <span class="arrow">→</span>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text">修改规则</div>
+          <div class="step-detail">改规则 or 补知识库</div>
+        </div>
+        <span class="arrow">→</span>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-text">重新测试</div>
+          <div class="step-detail">对比改善效果</div>
+        </div>
+      </div>
+
+      <h4 style="color:#0F6E56;font-size:15px;margin:14px 0 10px">测试问题推荐</h4>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>测试问题</th>
+            <th>测试目的</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>"APEC有哪些成员？"</td>
+            <td>基础事实题：测试知识库是否完整</td>
+          </tr>
+          <tr>
+            <td>"2026年APEC在哪里举办？主题是什么？"</td>
+            <td>信息检索题：测试回答准确度</td>
+          </tr>
+          <tr>
+            <td>"中国香港是APEC成员吗？"</td>
+            <td>易混淆题：考验规则效果（是否诚实说不确定）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>什么算"不满意"需要迭代？</strong>回答不准确 · 太长 · 语气不对 · 跑题 · 该说"不确定"却瞎编——都是要改的信号。发现问题别放过，那正是你下一次迭代的线索！
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Section 7: AI Governance ===== -->
+  <div class="section" id="sec7">
+    <div class="section-header">
+      <div class="section-icon">7</div>
+      <div class="section-title">AI治理：从智能体规则到国家法律</div>
+    </div>
+    <div class="section-body">
+
+      <div class="analogy-box">
+        <h4>核心类比：你给智能体定的规则 = AI治理的微观缩影</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>你给智能体定的规则</th>
+              <th>国家给AI公司定的法律</th>
+              <th>本质</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>不能胡说八道</td>
+              <td>不能生成虚假信息</td>
+              <td>约束AI的真实性</td>
+            </tr>
+            <tr>
+              <td>用初中生能懂的语言</td>
+              <td>考虑用户群体</td>
+              <td>约束AI的适用性</td>
+            </tr>
+            <tr>
+              <td>回答不超过200字</td>
+              <td>服务要有标准和边界</td>
+              <td>约束AI的行为范围</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="gov-grid">
+        <div class="gov-card">
+          <h4>什么是AI治理？</h4>
+          <p>约束AI的行为，让它安全、可靠、负责任地服务人类。你今天给智能体定规则，就是在做"微型AI治理"。</p>
+        </div>
+        <div class="gov-card">
+          <h4>为什么需要国际合作？</h4>
+          <p>AI是全球性技术。如果21个经济体的AI规则都不一样，同一个AI在不同国家行为不同，会造成混乱。APEC就是讨论AI规则的平台之一。</p>
+        </div>
+        <div class="gov-card">
+          <h4>APEC成都数字与AI部长级会议</h4>
+          <p>APEC 21个经济体一起讨论AI的发展和治理。这说明AI治理不是某一个国家的事，需要跨国合作。</p>
+        </div>
+        <div class="gov-card">
+          <h4>治理的三大核心议题</h4>
+          <p><strong>安全</strong>：AI不能造成伤害<br><strong>公平</strong>：AI不能有偏见<br><strong>透明</strong>：AI的决策可解释</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>思考题（为第6课辩论准备）：</strong>你觉得用AI做的作品（海报、文章、网页、智能体）应该标注"AI制作"吗？为什么？下节课我们要辩论这个问题，请提前想好你的观点和理由。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Section 8: Platform Guide ===== -->
+  <div class="section" id="sec8">
+    <div class="section-header">
+      <div class="section-icon">8</div>
+      <div class="section-title">智能体平台操作指引</div>
+    </div>
+    <div class="section-body">
+
+      <div class="platform-guide">
+        <h4>深教人工智能平台6 · AI 智能体模块 快速上手</h4>
+        <p style="font-size:13px;color:#555;line-height:1.8;margin:0 0 10px">
+          本课统一使用 <strong>深教人工智能平台6</strong> 的「AI 智能体」模块创建 APEC 知识助手，
+          用学校统一账号登录。若课堂网络或账号暂时不可用，可改用备选平台
+          <strong>Coze（扣子）</strong>——下面的六个步骤在两种平台上完全一致。
+        </p>
+        <ol>
+          <li><strong>登录：</strong>用老师提供的统一账号登录<strong>深教人工智能平台6</strong>，进入「AI 智能体」模块</li>
+          <li><strong>新建智能体：</strong>点击"创建智能体"按钮 → 输入名称（如"APEC小助手"）→ 点击确认</li>
+          <li><strong>设定角色：</strong>在角色设定（人设 / 提示词）区域填写角色 Prompt（参考第4节模板）</li>
+          <li><strong>编写对话规则：</strong>把规则条目写进角色 Prompt 中（参考第5节清单）</li>
+          <li><strong>配置知识库：</strong>进入"知识库"区域 → 点击"添加" → 可输入文本或上传文档（参考第9节APEC信息）</li>
+          <li><strong>设置开场白：</strong>在"开场白"区域输入友好问候语</li>
+          <li><strong>发布：</strong>点击"发布 / 保存"按钮 → 按提示确认</li>
+          <li><strong>测试：</strong>在预览对话区输入测试问题，查看智能体回答</li>
+          <li><strong>迭代：</strong>发现问题 → 回到配置页面修改 → 重新发布 → 再测试</li>
+          <li><strong>保存链接：</strong>发布后获取智能体链接/二维码，<strong style="color:#e74c3c">务必保存好</strong>，第6课要用</li>
+        </ol>
+      </div>
+
+      <div class="tip-box">
+        <strong>遇到问题怎么办？</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li>登录不上？→ 举手找老师，使用共享账号</li>
+          <li>发布失败？→ 检查角色Prompt是否完整，知识库是否配置</li>
+          <li>智能体不按规则回答？→ 检查规则是否写在正确位置（角色Prompt中）</li>
+          <li>知识库不生效？→ 确认知识库已上传成功并启用</li>
+          <li>网络不通？→ 告诉老师，老师会用录屏演示替代</li>
+        </ul>
+      </div>
+
+      <h4 style="color:#0F6E56;font-size:15px;margin:16px 0 10px">相关链接</h4>
+      <ul class="links-list">
+        <li>
+          <a href="%E5%B9%B3%E5%8F%B0%E7%95%8C%E9%9D%A2%E6%88%AA%E5%9B%BE/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%E5%B9%B3%E5%8F%B06-AI%E6%99%BA%E8%83%BD%E4%BD%93.png" target="_blank">深教人工智能平台6 · AI 智能体模块（界面截图）</a>
+          <div class="link-desc">本课使用的平台界面，离线可看：角色设定、对话规则、知识库的位置一目了然</div>
+        </li>
+        <li>
+          <a href="https://www.coze.cn" target="_blank">Coze（扣子）· 备选平台</a>
+          <div class="link-desc">课堂网络或账号不可用时的备选方案，创建流程与深教平台一致</div>
+        </li>
+        <li>
+          <a href="%E5%B9%B3%E5%8F%B0%E7%95%8C%E9%9D%A2%E6%88%AA%E5%9B%BE/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%E5%B9%B3%E5%8F%B06-AI%E6%99%BA%E8%83%BD%E4%BD%932.png" target="_blank">平台配置界面（第二张截图）</a>
+          <div class="link-desc">配置智能体时的界面示意，可作为操作参照</div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== Section 9: APEC Quick Reference ===== -->
+  <div class="section" id="sec9">
+    <div class="section-header">
+      <div class="section-icon">9</div>
+      <div class="section-title">APEC基础知识速查（知识库素材）</div>
+    </div>
+    <div class="section-body">
+
+      <p style="font-size:14px;color:#555;margin-bottom:14px">以下信息可直接复制到智能体的<strong style="color:#0F6E56">知识库</strong>中，让你的APEC智能体"有料可答"。</p>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>APEC基本信息</h4>
+          <ul>
+            <li>全称：亚太经济合作组织（Asia-Pacific Economic Cooperation）</li>
+            <li>成立时间：1989年</li>
+            <li>成员数量：<span class="highlight">21个</span>成员经济体</li>
+            <li>宗旨：推动区域经济一体化、贸易投资自由化</li>
+            <li>运作方式：协商一致，非约束性</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>2026年深圳APEC</h4>
+          <ul>
+            <li>举办城市：<span class="highlight">中国·深圳</span></li>
+            <li>深圳特色：中国科技创新之都，被誉为"中国硅谷"</li>
+            <li>主题：数字经济、可持续发展、包容性增长</li>
+            <li>三大优先领域：贸易投资、数字经济、包容性可持续发展</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-card" style="margin-bottom:14px">
+        <h4>APEC 21个成员经济体</h4>
+        <p>澳大利亚、文莱、加拿大、智利、中国、中国香港、印度尼西亚、日本、韩国、马来西亚、墨西哥、新西兰、巴布亚新几内亚、秘鲁、菲律宾、俄罗斯、新加坡、中国台北、泰国、美国、越南。</p>
+        <p style="margin-top:6px"><span class="highlight">注意：</span>中国香港和中国台北是以经济体身份加入APEC的，不是以国家身份。这是一个常见的易混淆知识点——适合用来测试智能体的规则效果！</p>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>APEC成都数字与AI部长级会议</h4>
+          <p>2024年7月，APEC在成都召开数字与AI部长级会议，21个经济体一起讨论AI的发展和治理。这说明AI治理已成为国际议题，需要跨国合作。</p>
+        </div>
+        <div class="info-card">
+          <h4>第3课数据（进阶知识库素材）</h4>
+          <p>21个经济体的GDP、人口、贸易额等数据。如果你把这些数据输入知识库，智能体就能回答"APEC哪个经济体GDP最高？"等数据问题。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>知识库配置技巧：</strong>基础版至少包含"APEC基本信息"和"2026年深圳APEC"两块内容。进阶版可以加入第3课的数据和成员经济体详细介绍。知识库越丰富，智能体能回答的问题越多！
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  const block = btn.parentElement;
+  const text = block.innerText.replace('复制', '').replace('已复制', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已复制';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '复制';
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    // Fallback
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    btn.textContent = '已复制';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '复制';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

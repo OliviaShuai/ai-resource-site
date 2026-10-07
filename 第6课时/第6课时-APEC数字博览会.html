@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEC数字博览会 · AI遇见APEC单元收官</title>
+<style>
+  :root {
+    --main: #639922;
+    --main-dark: #4a7a15;
+    --main-light: #eaf4dc;
+    --gold: #c9a227;
+    --bg: #f6f8f2;
+    --card: #ffffff;
+    --text: #2b3320;
+    --muted: #7a8470;
+    --red: #d85a30;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  /* ===== 头部 ===== */
+  header {
+    background: linear-gradient(120deg, #4a7a15 0%, #639922 55%, #7db32e 100%);
+    color: #fff;
+    padding: 26px 30px 0;
+    box-shadow: 0 4px 18px rgba(74,122,21,.25);
+  }
+  .head-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .head-title { display: flex; align-items: center; gap: 14px; }
+  .head-logo {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    border: 2px solid rgba(255,255,255,.65);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: bold; letter-spacing: 1px;
+  }
+  h1 { font-size: 24px; letter-spacing: 1px; }
+  .head-sub { font-size: 13px; opacity: .92; margin-top: 3px; }
+  .head-badge {
+    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.5);
+    border-radius: 30px; padding: 7px 16px; font-size: 13px;
+  }
+  /* ===== 导航 ===== */
+  nav { display: flex; gap: 6px; margin-top: 20px; flex-wrap: wrap; }
+  .nav-btn {
+    background: rgba(255,255,255,.14); color: #fff; border: none;
+    padding: 11px 22px; font-size: 15px; cursor: pointer;
+    border-radius: 10px 10px 0 0; transition: .2s;
+    font-family: inherit;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,.3); }
+  .nav-btn.active { background: var(--bg); color: var(--main-dark); font-weight: bold; }
+  /* ===== 主体 ===== */
+  main { max-width: 1120px; margin: 0 auto; padding: 26px 22px 60px; }
+  .tab-page { display: none; animation: fadein .3s; }
+  .tab-page.show { display: block; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none;} }
+  .page-title { font-size: 20px; margin-bottom: 6px; color: var(--main-dark); }
+  .page-desc { font-size: 13.5px; color: var(--muted); margin-bottom: 20px; line-height: 1.7; }
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: 0 2px 10px rgba(43,51,32,.07);
+    padding: 20px 22px; margin-bottom: 16px;
+  }
+  button { font-family: inherit; }
+  .btn {
+    background: var(--main); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 22px; font-size: 14.5px; cursor: pointer; transition: .15s;
+  }
+  .btn:hover { background: var(--main-dark); }
+  .btn.ghost { background: #fff; color: var(--main-dark); border: 1.5px solid var(--main); }
+  .btn.ghost:hover { background: var(--main-light); }
+  .btn.small { padding: 6px 14px; font-size: 13px; }
+  .btn.warn { background: #b3563a; }
+  .btn:disabled { background: #b9c2ad; cursor: not-allowed; }
+
+  /* ===== 学习之旅 ===== */
+  .progress-wrap { background: var(--card); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 18px; box-shadow: 0 2px 10px rgba(43,51,32,.07); }
+  .progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .progress-top b { font-size: 16px; color: var(--main-dark); }
+  .progress-pct { font-size: 22px; font-weight: bold; color: var(--main); }
+  .progress-bar { height: 12px; background: #e6ecdd; border-radius: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #639922, #8ec63f); border-radius: 8px; transition: width .4s; }
+  .timeline { position: relative; padding-left: 34px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 12px; top: 8px; bottom: 8px;
+    width: 4px; background: #d8e4c8; border-radius: 2px;
+  }
+  .lesson-node { position: relative; background: var(--card); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(43,51,32,.06); cursor: pointer; transition: .2s; }
+  .lesson-node:hover { transform: translateX(4px); }
+  .lesson-dot {
+    position: absolute; left: -30px; top: 18px;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 4px solid #fff; box-shadow: 0 0 0 2px #d8e4c8;
+  }
+  .lesson-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .lesson-num { color: #fff; font-weight: bold; border-radius: 8px; padding: 4px 12px; font-size: 14px; }
+  .lesson-title { font-size: 16.5px; font-weight: bold; flex: 1; min-width: 200px; }
+  .lesson-arrow { color: var(--muted); font-size: 13px; }
+  .lesson-body { display: none; padding-top: 12px; }
+  .lesson-node.open .lesson-body { display: block; }
+  .lesson-q { font-size: 13.5px; color: var(--muted); margin-bottom: 10px; }
+  .check-item { display: flex; align-items: flex-start; gap: 9px; padding: 7px 10px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: .15s; }
+  .check-item:hover { background: var(--main-light); }
+  .check-item input { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--main); cursor: pointer; }
+  .check-item.done span { color: var(--muted); text-decoration: line-through; }
+  .final-words { background: linear-gradient(120deg, #f2f8e8, #ffffff); border: 1.5px dashed var(--main); border-radius: var(--radius); padding: 18px 22px; margin-top: 6px; }
+  .final-words h3 { color: var(--main-dark); font-size: 16px; margin-bottom: 10px; }
+  .final-words p { font-size: 14.5px; line-height: 2; }
+
+  /* ===== 博览会 ===== */
+  .upload-panel .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .form-item label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+  .form-item input, .form-item select, .form-item textarea {
+    width: 100%; padding: 9px 12px; border: 1.5px solid #d8e0cc; border-radius: 8px;
+    font-size: 14px; font-family: inherit; background: #fff;
+  }
+  .form-item input:focus, .form-item select:focus, .form-item textarea:focus { outline: none; border-color: var(--main); }
+  .form-item.full { grid-column: 1 / -1; }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 4px 0 16px; }
+  .chip {
+    background: #fff; border: 1.5px solid #cfd8c2; color: var(--text);
+    border-radius: 20px; padding: 6px 16px; font-size: 13px; cursor: pointer; transition: .15s;
+  }
+  .chip:hover { border-color: var(--main); }
+  .chip.on { background: var(--main); color: #fff; border-color: var(--main); }
+  .rank-strip { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .rank-card {
+    flex: 1; min-width: 200px; background: var(--card); border-radius: var(--radius);
+    padding: 14px 16px; box-shadow: 0 2px 10px rgba(43,51,32,.07);
+    border-top: 4px solid var(--gold); display: flex; align-items: center; gap: 12px;
+  }
+  .rank-card .medal { font-size: 30px; }
+  .rank-card .r-title { font-weight: bold; font-size: 15px; }
+  .rank-card .r-info { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .rank-card .r-score { margin-left: auto; font-size: 20px; font-weight: bold; color: var(--gold); }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .work-card { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 10px rgba(43,51,32,.08); display: flex; flex-direction: column; }
+  .work-img { height: 175px; background: linear-gradient(135deg, #e8f0dd, #d4e3bd); display: flex; align-items: center; justify-content: center; color: #9db884; font-size: 40px; cursor: pointer; }
+  .work-img img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+  .work-info { padding: 14px 16px 12px; flex: 1; display: flex; flex-direction: column; }
+  .work-tag { display: inline-block; font-size: 11.5px; color: #fff; border-radius: 5px; padding: 2.5px 9px; margin-bottom: 7px; align-self: flex-start; }
+  .work-title { font-size: 15.5px; font-weight: bold; margin-bottom: 3px; }
+  .work-author { font-size: 12.5px; color: var(--muted); margin-bottom: 7px; }
+  .work-desc { font-size: 13px; color: #555; line-height: 1.6; flex: 1; margin-bottom: 10px; word-break: break-all; }
+  .vote-bar { display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e0e6d5; padding-top: 10px; }
+  .score-show { font-size: 13px; }
+  .score-show b { color: var(--gold); font-size: 17px; }
+  .stars { display: flex; gap: 2px; }
+  .star { font-size: 21px; color: #d5dcc8; cursor: pointer; transition: .1s; user-select: none; }
+  .star.on { color: var(--gold); }
+  .star:hover { transform: scale(1.18); }
+  .voted-mark { font-size: 12px; color: var(--main); background: var(--main-light); border-radius: 6px; padding: 4px 10px; }
+
+  /* ===== 公约投票 ===== */
+  .vote-status { font-size: 13.5px; color: var(--main-dark); background: var(--main-light); border-radius: 8px; padding: 9px 14px; margin-bottom: 16px; display: inline-block; }
+  .clause-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .clause {
+    background: var(--card); border-radius: 12px; padding: 16px 18px;
+    border: 2px solid transparent; cursor: pointer; transition: .15s; position: relative;
+    box-shadow: 0 2px 8px rgba(43,51,32,.06);
+  }
+  .clause:hover { border-color: #b9cf9a; }
+  .clause.picked { border-color: var(--main); background: #f6faef; }
+  .clause.locked { cursor: default; opacity: .55; }
+  .clause-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .clause-ico { font-size: 22px; }
+  .clause-name { font-weight: bold; font-size: 15px; }
+  .clause-text { font-size: 13.5px; color: #555; line-height: 1.7; }
+  .clause-check { position: absolute; top: 12px; right: 14px; color: var(--main); font-size: 19px; font-weight: bold; visibility: hidden; }
+  .clause.picked .clause-check { visibility: visible; }
+  .result-list { margin-top: 6px; }
+  .result-row { margin-bottom: 14px; }
+  .result-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; }
+  .result-top b { font-size: 14.5px; }
+  .result-pct { color: var(--main-dark); font-weight: bold; }
+  .result-bar-bg { height: 16px; background: #e6ecdd; border-radius: 9px; overflow: hidden; }
+  .result-bar { height: 100%; background: linear-gradient(90deg, #639922, #8ec63f); border-radius: 9px; transition: width .5s; }
+  .result-row.win .result-bar { background: linear-gradient(90deg, #c9a227, #e3c558); }
+  .win-badge { color: var(--gold); font-size: 13px; margin-left: 6px; }
+
+  /* ===== 证书 ===== */
+  .cert-form { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
+  .cert-form .form-item { min-width: 170px; }
+  .cert-canvas-wrap { background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: 0 2px 12px rgba(43,51,32,.09); text-align: center; }
+  #certCanvas { width: 100%; max-width: 840px; border-radius: 8px; box-shadow: 0 3px 14px rgba(43,51,32,.15); }
+  .cert-actions { margin-top: 16px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  /* ===== 教师工具 ===== */
+  .teacher-zone { margin-top: 30px; border-top: 1.5px dashed #cfd8c2; padding-top: 18px; }
+  .teacher-zone h4 { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+  .teacher-zone .btn { margin-right: 8px; margin-bottom: 8px; }
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #3a4629; color: #fff; padding: 11px 26px; border-radius: 30px;
+    font-size: 14px; opacity: 0; transition: .3s; pointer-events: none; z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .empty-tip { text-align: center; color: var(--muted); padding: 50px 0; font-size: 14px; }
+  @media (max-width: 760px) {
+    .upload-panel .form-grid, .clause-list { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div class="head-title">
+      <div class="head-logo">AI</div>
+      <div>
+        <h1>APEC 数字博览会</h1>
+        <div class="head-sub">《AI遇见APEC》六课时单元收官 · 2026 APEC深圳峰会主题课程</div>
+      </div>
+    </div>
+    <div class="head-badge">🎪 作品互评 · 📜 公约投票 · 🗺️ 学习复盘 · 🏆 证书颁发</div>
+  </div>
+  <nav>
+    <button class="nav-btn active" onclick="switchTab('journey', this)">🗺️ 学习之旅</button>
+    <button class="nav-btn" onclick="switchTab('expo', this)">🎪 作品博览会</button>
+    <button class="nav-btn" onclick="switchTab('pact', this)">📜 公约投票</button>
+    <button class="nav-btn" onclick="switchTab('cert', this)">🏆 我的证书</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= 学习之旅 ================= -->
+<section id="tab-journey" class="tab-page show">
+  <div class="page-title">🗺️ 我的六课时学习之旅</div>
+  <div class="page-desc">点击每一课时卡片展开"我学会了"清单，逐项勾选，回顾你从认识AI到创造AI的完整旅程。勾选进度会自动保存。</div>
+
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <b>单元学习复盘进度</b>
+      <span class="progress-pct" id="jPct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="jFill" style="width:0%"></div></div>
+    <div style="font-size:12.5px;color:var(--muted);margin-top:8px" id="jCount">已掌握 0 / 18 项</div>
+  </div>
+
+  <div class="timeline" id="timeline"></div>
+
+  <div class="final-words">
+    <h3>🌟 单元收官三句话</h3>
+    <p>
+      ① <b>AI是工具，不是替身。</b>它帮我们画图、分析数据、写代码、建智能体，但想法和判断永远来自我们自己。<br>
+      ② <b>用AI要负责。</b>标注AI参与、核实AI答案、保护隐私、尊重版权——这些规则由我们自己制定、自己遵守。<br>
+      ③ <b>人永远是主导者。</b>从Token到Prompt，从海报到智能体，真正的主角一直是你。
+    </p>
+  </div>
+</section>
+
+<!-- ================= 作品博览会 ================= -->
+<section id="tab-expo" class="tab-page">
+  <div class="page-title">🎪 作品博览会 · 展示与互评</div>
+  <div class="page-desc">
+    上传你在本单元创作的作品（海报 / 数据图表 / 互动网页 / 智能体 / 作品集），浏览同学的佳作并打分互评。
+    每人每件作品只能投一次分（1-5星），得分实时汇总，前三名将登上领奖台！
+  </div>
+
+  <div class="card upload-panel">
+    <h3 style="margin-bottom:14px;color:var(--main-dark)">📤 上传我的作品</h3>
+    <div class="form-grid">
+      <div class="form-item"><label>你的姓名 *</label><input id="wName" placeholder="如：李明"></div>
+      <div class="form-item"><label>班级（选填）</label><input id="wClass" placeholder="如：初一(3)班"></div>
+      <div class="form-item"><label>作品类别 *</label>
+        <select id="wType">
+          <option value="poster">🎨 第2课 · AI主题海报</option>
+          <option value="chart">📊 第3课 · AI数据可视化图表</option>
+          <option value="web">💻 第4课 · APEC互动网页</option>
+          <option value="agent">🤖 第5课 · APEC知识智能体</option>
+          <option value="folio">📚 第6课 · 单元作品集</option>
+        </select>
+      </div>
+      <div class="form-item"><label>作品标题 *</label><input id="wTitle" placeholder="给你的作品起个响亮的名字"></div>
+      <div class="form-item full"><label>作品简介（一两句话）</label><textarea id="wDesc" rows="2" placeholder="如：用AI生成的APEC深圳峰会宣传海报，经过三轮迭代优化"></textarea></div>
+      <div class="form-item"><label>作品截图/图片</label><input type="file" id="wImg" accept="image/*"></div>
+      <div class="form-item"><label>作品链接（网页/智能体选填）</label><input id="wLink" placeholder="http://…"></div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button class="btn" onclick="submitWork()">🚀 提交作品</button>
+      <button class="btn ghost" onclick="seedDemo()">✨ 载入示例作品（教师演示用）</button>
+    </div>
+  </div>
+
+  <div class="rank-strip" id="rankStrip"></div>
+
+  <div class="filter-row" id="typeFilter">
+    <span style="font-size:13.5px;color:var(--muted)">筛选：</span>
+    <button class="chip on" data-t="all">全部</button>
+    <button class="chip" data-t="poster">海报</button>
+    <button class="chip" data-t="chart">数据图表</button>
+    <button class="chip" data-t="web">互动网页</button>
+    <button class="chip" data-t="agent">智能体</button>
+    <button class="chip" data-t="folio">作品集</button>
+    <span style="margin-left:auto;font-size:13.5px;color:var(--muted)">排序：</span>
+    <button class="chip on" data-s="new" onclick="toggleSort(this)">最新</button>
+    <button class="chip" data-s="score" onclick="toggleSort(this)">最高分</button>
+  </div>
+
+  <div class="gallery" id="gallery"></div>
+</section>
+
+<!-- ================= 公约投票 ================= -->
+<section id="tab-pact" class="tab-page">
+  <div class="page-title">📜 班级AI公约 · 全民公投</div>
+  <div class="page-desc">
+    从6条候选条款中勾选你认为最重要的 <b>5条</b>（不能多选），得票最高的5条将正式写入《班级AI使用公约》。
+    每人限投一票，投票后可查看实时统计结果。
+  </div>
+
+  <div class="vote-status" id="voteStatus">你还没有投票</div>
+  <div class="card" style="padding:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <h3 style="color:var(--main-dark)">勾选条款（已选 <span id="pickCount">0</span>/5）</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="voterName" placeholder="你的姓名（选填）" style="padding:8px 12px;border:1.5px solid #d8e0cc;border-radius:8px;font-size:13.5px">
+        <button class="btn" id="voteBtn" onclick="submitVote()">🗳️ 提交投票</button>
+      </div>
+    </div>
+    <div class="clause-list" id="clauseList"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="color:var(--main-dark);margin-bottom:16px">📊 实时开票结果 <span style="font-size:12.5px;color:var(--muted);font-weight:normal">（金色为当前当选条款 · 总票数：<span id="totalBallots">0</span>）</span></h3>
+    <div class="result-list" id="resultList"></div>
+  </div>
+</section>
+
+<!-- ================= 证书 ================= -->
+<section id="tab-cert" class="tab-page">
+  <div class="page-title">🏆 我的学习证书</div>
+  <div class="page-desc">
+    完成六课时学习复盘后，输入你的姓名，生成属于你的《AI遇见APEC》单元学习证书。可以下载PNG保存，或打印留念。
+  </div>
+
+  <div class="card">
+    <div class="cert-form">
+      <div class="form-item"><label>姓名 *</label><input id="cName" placeholder="如：李明"></div>
+      <div class="form-item"><label>证书类型</label>
+        <select id="cType">
+          <option value="结业证书">单元学习结业证书</option>
+          <option value="最佳创意奖">🏆 最佳创意奖</option>
+          <option value="最佳技术奖">🛠️ 最佳技术奖</option>
+          <option value="最佳数据洞察奖">📊 最佳数据洞察奖</option>
+          <option value="最佳智能体奖">🤖 最佳智能体奖</option>
+          <option value="最佳作品集奖">📚 最佳作品集奖</option>
+          <option value="最佳辩手奖">🎙️ 最佳辩手奖</option>
+        </select>
+      </div>
+      <div class="form-item"><label>颁发日期</label><input id="cDate" type="date"></div>
+      <button class="btn" onclick="drawCert()">✨ 生成证书预览</button>
+    </div>
+  </div>
+
+  <div class="cert-canvas-wrap">
+    <canvas id="certCanvas" width="1400" height="1000"></canvas>
+    <div class="cert-actions">
+      <button class="btn" onclick="downloadCert()">⬇️ 下载证书PNG</button>
+      <button class="btn ghost" onclick="printCert()">🖨️ 打印证书</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 教师工具 ================= -->
+<div class="teacher-zone">
+  <h4>🔧 教师工具（数据管理 · 数据保存在本机浏览器）</h4>
+  <button class="btn ghost small" onclick="exportData()">📤 导出全部数据</button>
+  <button class="btn ghost small" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+  <button class="btn warn small" onclick="resetAll()">🗑️ 清空全部数据</button>
+  <span style="font-size:12px;color:var(--muted);margin-left:10px">提示：本站为单机版，数据保存在当前浏览器。联机展示时可用"导出/导入"汇总各机数据到教师机。</span>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================
+   数据层：localStorage
+===================================================== */
+const LS = {
+  works: 'apec6_works',        // 作品数组
+  votes: 'apec6_votes',        // { workId: {score, voter} }
+  myVotes: 'apec6_myvotes',    // 本机已投票的作品id数组
+  ballots: 'apec6_ballots',    // 公约投票数组 [{name, picks:[...]}]
+  myBallot: 'apec6_myballot',  // 本机是否已投公约
+  checks: 'apec6_checks'       // 学习之旅勾选 {lessonIdx: [bool,...]}
+};
+const load = k => { try { return JSON.parse(localStorage.getItem(k)) || null; } catch(e){ return null; } };
+const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+/* =====================================================
+   Tab 切换
+===================================================== */
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('show'));
+  document.getElementById('tab-' + id).classList.add('show');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (id === 'cert') drawCert();
+}
+
+/* =====================================================
+   Tab 1：学习之旅
+===================================================== */
+const LESSONS = [
+  { color:'#1A5C8E', title:'认识AI——从Token到Prompt', q:'AI是怎么"听懂"我们说话的？它真的什么都知道吗？',
+    items:['知道AI把文字切分成Token再理解','会用"角色+任务+约束"三要素写Prompt','理解AI是概率预测，会犯错、需要核实'] },
+  { color:'#BA7517', title:'AI绘画——APEC主题海报设计', q:'AI是怎么从一片噪声中"画"出图片的？怎么让它画得符合我的想法？',
+    items:['知道AI绘图的核心机制是从噪声中去噪','会用五要素写图像描述Prompt','经历"生成→发现→改进"三轮迭代做出海报'] },
+  { color:'#7F77DD', title:'AI数据可视化——APEC经济体数据对比', q:'一堆数字看不出规律，怎么让数据"开口说话"？',
+    items:['知道可视化让数据更容易被读懂','能根据数据特点选择合适的图表类型','体验"人提问+AI分析+人判断"的人机协作'] },
+  { color:'#0F6E56', title:'AI编程——APEC互动网页生成', q:'网页是怎么"写"出来的？有了AI还需要学代码吗？',
+    items:['认识HTML骨架、CSS装修、JS行为三件套','能在模板支架上手写简单的APEC网页','会用AI迭代优化网页，知道AI代码需要人来验证'] },
+  { color:'#D85A30', title:'AI智能体——构建APEC知识助手', q:'能不能"造"一个属于我的AI助手？给AI定规则意味着什么？',
+    items:['知道智能体三要素：角色设定+知识库+对话规则','会配置并测试一个APEC知识智能体','理解"给AI定规则"就是最小号的AI治理'] },
+  { color:'#639922', title:'成果展与AI伦理论坛', q:'AI用得爽就够了吗？怎样才算负责任地使用AI？',
+    items:['会用AI把五个作品整合成数字作品集','能识别算法偏见、AI幻觉、技术滥用三类风险','参与制定并遵守班级AI使用公约'] },
+];
+
+function renderJourney() {
+  const checks = load(LS.checks) || {};
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  LESSONS.forEach((L, i) => {
+    const st = checks[i] || [false,false,false];
+    const node = document.createElement('div');
+    node.className = 'lesson-node' + (i === 0 ? ' open' : '');
+    node.innerHTML = `
+      <div class="lesson-dot" style="background:${L.color}"></div>
+      <div class="lesson-head" onclick="this.parentElement.classList.toggle('open')">
+        <span class="lesson-num" style="background:${L.color}">第${i+1}课时</span>
+        <span class="lesson-title">${L.title}</span>
+        <span class="lesson-arrow">点击展开 ▾</span>
+      </div>
+      <div class="lesson-body">
+        <div class="lesson-q">❓ ${L.q}</div>
+        ${L.items.map((t, j) => `
+          <div class="check-item ${st[j] ? 'done' : ''}" onclick="toggleCheck(event, ${i}, ${j})">
+            <input type="checkbox" ${st[j] ? 'checked' : ''} onclick="event.stopPropagation()">
+            <span>${t}</span>
+          </div>`).join('')}
+      </div>`;
+    tl.appendChild(node);
+  });
+  updateJourneyProgress();
+}
+function toggleCheck(e, i, j) {
+  if (e.target.tagName === 'INPUT') return;
+  const checks = load(LS.checks) || {};
+  const st = checks[i] || [false,false,false];
+  st[j] = !st[j];
+  checks[i] = st;
+  save(LS.checks, checks);
+  renderJourney();
+}
+function updateJourneyProgress() {
+  const checks = load(LS.checks) || {};
+  let done = 0, total = 0;
+  LESSONS.forEach((L, i) => { (checks[i] || []).forEach(v => { total++; if (v) done++; }); });
+  const pct = Math.round(done / 18 * 100);
+  document.getElementById('jPct').textContent = pct + '%';
+  document.getElementById('jFill').style.width = pct + '%';
+  document.getElementById('jCount').textContent = `已掌握 ${done} / 18 项` + (pct === 100 ? ' · 🎉 恭喜完成全部复盘！' : '');
+}
+
+/* =====================================================
+   Tab 2：作品博览会
+===================================================== */
+const TYPES = {
+  poster: { name:'AI海报',  ico:'🎨', color:'#BA7517' },
+  chart:  { name:'数据图表', ico:'📊', color:'#7F77DD' },
+  web:    { name:'互动网页', ico:'💻', color:'#0F6E56' },
+  agent:  { name:'智能体',   ico:'🤖', color:'#D85A30' },
+  folio:  { name:'作品集',   ico:'📚', color:'#639922' },
+};
+let curFilter = 'all', curSort = 'new';
+
+function allWorks() { return load(LS.works) || []; }
+function allVotes() { return load(LS.votes) || {}; }
+function myVotes() { return load(LS.myVotes) || []; }
+function workScore(id) {
+  const votes = allVotes(); let cnt = 0, sum = 0;
+  Object.values(votes).forEach(v => { if (v.workId === id) { cnt++; sum += v.score; } });
+  return { cnt, avg: cnt ? (sum / cnt) : 0 };
+}
+
+function compressImage(file, cb) {
+  if (!file) return cb(null);
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 480;
+      let w = img.width, h = img.height;
+      if (w > max || h > max) { const r = Math.min(max/w, max/h); w = Math.round(w*r); h = Math.round(h*r); }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(c.toDataURL('image/jpeg', 0.72));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitWork() {
+  const name = document.getElementById('wName').value.trim();
+  const title = document.getElementById('wTitle').value.trim();
+  if (!name || !title) return toast('⚠️ 请填写姓名和作品标题');
+  const fileInput = document.getElementById('wImg');
+  compressImage(fileInput.files[0], imgData => {
+    const works = allWorks();
+    works.unshift({
+      id: 'w' + Date.now() + Math.floor(Math.random()*999),
+      name, cls: document.getElementById('wClass').value.trim(),
+      type: document.getElementById('wType').value,
+      title, desc: document.getElementById('wDesc').value.trim(),
+      link: document.getElementById('wLink').value.trim(),
+      img: imgData, time: Date.now()
+    });
+    try {
+      save(LS.works, works);
+    } catch (e) {
+      works.shift();
+      return toast('⚠️ 存储空间已满，请用"教师工具"清理或导出');
+    }
+    document.getElementById('wTitle').value = '';
+    document.getElementById('wDesc').value = '';
+    document.getElementById('wLink').value = '';
+    document.getElementById('wImg').value = '';
+    fileInput.value = '';
+    renderExpo();
+    toast('✅ 作品上传成功，已进入博览会！');
+  });
+}
+
+function castVote(id, score) {
+  if (myVotes().includes(id)) return toast('你已经给这件作品投过分啦');
+  const votes = allVotes();
+  votes['v' + Date.now()] = { workId: id, score };
+  save(LS.votes, votes);
+  save(LS.myvotes, [...myVotes(), id]);
+  renderExpo();
+  toast('🌟 打分成功！感谢参与互评');
+}
+
+document.getElementById('typeFilter').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  if (b.dataset.t !== undefined) {
+    curFilter = b.dataset.t;
+    b.parentElement.querySelectorAll('.chip[data-t]').forEach(c => c.classList.toggle('on', c === b));
+    renderExpo();
+  }
+});
+function toggleSort(b) {
+  curSort = b.dataset.s;
+  document.querySelectorAll('#typeFilter .chip[data-s]').forEach(c => c.classList.toggle('on', c === b));
+  renderExpo();
+}
+
+function renderExpo() {
+  const gallery = document.getElementById('gallery');
+  const strip = document.getElementById('rankStrip');
+  let works = allWorks();
+  // 排行榜
+  const scored = works.map(w => ({ w, s: workScore(w.id) })).filter(x => x.s.cnt > 0)
+                      .sort((a, b) => b.s.avg - a.s.avg).slice(0, 3);
+  const medals = ['🥇', '🥈', '🥉'];
+  strip.innerHTML = scored.length
+    ? scored.map((x, i) => `
+      <div class="rank-card">
+        <div class="medal">${medals[i]}</div>
+        <div><div class="r-title">${x.w.title}</div>
+        <div class="r-info">${x.w.name} · ${TYPES[x.w.type].name} · ${x.s.cnt}票</div></div>
+        <div class="r-score">${x.s.avg.toFixed(1)}</div>
+      </div>`).join('')
+    : `<div class="rank-card" style="border-top-color:#cfd8c2"><div class="medal">🏆</div>
+       <div><div class="r-title">领奖台虚位以待</div><div class="r-info">快去给喜欢的作品打分吧</div></div></div>`;
+  // 作品列表
+  let list = works.filter(w => curFilter === 'all' || w.type === curFilter);
+  if (curSort === 'score') list = list.map(w => ({w, s: workScore(w.id)})).sort((a,b) => b.s.avg - a.s.avg).map(x => x.w);
+  gallery.innerHTML = list.length ? '' : '<div class="empty-tip" style="grid-column:1/-1">暂无作品 · 点击上方"提交作品"或"载入示例作品"体验</div>';
+  const mv = myVotes();
+  list.forEach(w => {
+    const s = workScore(w.id);
+    const t = TYPES[w.type];
+    const card = document.createElement('div');
+    card.className = 'work-card';
+    const voted = mv.includes(w.id);
+    card.innerHTML = `
+      ${w.img
+        ? `<div class="work-img" onclick="window.open('${w.img}','_blank')"><img src="${w.img}" alt="${w.title}"></div>`
+        : `<div class="work-img" onclick="${w.link ? `window.open('${w.link}')` : ''}">${t.ico}</div>`}
+      <div class="work-info">
+        <span class="work-tag" style="background:${t.color}">${t.ico} ${t.name}</span>
+        <div class="work-title">${w.title}</div>
+        <div class="work-author">👤 ${w.name}${w.cls ? ' · ' + w.cls : ''}</div>
+        ${w.desc ? `<div class="work-desc">${w.desc}</div>` : ''}
+        ${w.link ? `<a href="${w.link}" target="_blank" style="font-size:12.5px;color:var(--main-dark);margin-bottom:8px">🔗 查看作品</a>` : ''}
+        <div class="vote-bar">
+          <div class="score-show">得分 <b>${s.cnt ? s.avg.toFixed(1) : '—'}</b> <span style="color:var(--muted)">(${s.cnt}票)</span></div>
+          ${voted
+            ? '<span class="voted-mark">✓ 已互评</span>'
+            : `<div class="stars" title="点击星星打分">${[1,2,3,4,5].map(n =>
+                `<span class="star" onclick="castVote('${w.id}', ${n})">★</span>`).join('')}</div>`}
+        </div>
+      </div>`;
+    // 已投票的卡片显示历史星
+    if (voted) {
+      const votes = allVotes();
+      const mine = Object.values(votes).find(v => v.workId === w.id);
+      const starsEl = card.querySelector('.voted-mark');
+      if (mine) starsEl.textContent = '✓ 你打了 ' + mine.score + ' 星';
+    }
+    gallery.appendChild(card);
+  });
+}
+
+/* 示例作品（教师演示） */
+function makePlaceholder(text, color) {
+  const c = document.createElement('canvas');
+  c.width = 480; c.height = 300;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 480, 300);
+  g.addColorStop(0, color + '22'); g.addColorStop(1, color + '66');
+  x.fillStyle = g; x.fillRect(0, 0, 480, 300);
+  x.strokeStyle = color; x.lineWidth = 3;
+  x.strokeRect(24, 24, 432, 252);
+  x.fillStyle = color;
+  x.font = 'bold 34px "Microsoft YaHei"';
+  x.textAlign = 'center';
+  x.fillText(text, 240, 165);
+  return c.toDataURL('image/jpeg', 0.8);
+}
+function seedDemo() {
+  if (allWorks().length && !confirm('已有作品数据，仍要追加示例作品吗？')) return;
+  const demo = [
+    { name:'林小深', cls:'初一(2)班', type:'poster', title:'山海连城·2026 APEC深圳',
+      desc:'以深圳山海城市天际线为主体，AI三轮迭代优化构图与配色', img: makePlaceholder('APEC 主题海报', '#BA7517') },
+    { name:'陈美琪', cls:'初一(5)班', type:'chart', title:'21个经济体人均GDP对比',
+      desc:'用AI辅助分析发现：人均GDP前五全是小型经济体', img: makePlaceholder('数据可视化图表', '#7F77DD') },
+    { name:'王子航', cls:'初一(3)班', type:'web', title:'APEC知识互动网页',
+      desc:'手写+AI优化，含成员卡片点击展开交互', img: makePlaceholder('互动网页', '#0F6E56') },
+    { name:'赵一诺', cls:'初一(1)班', type:'agent', title:'APEC小亚·知识助手',
+      desc:'配置了角色设定和对话规则，不确定的问题会说"我不确定"', img: makePlaceholder('AI 智能体', '#D85A30') },
+  ];
+  const works = allWorks();
+  demo.forEach((d, i) => works.push(Object.assign({ id:'demo'+i, link:'', time: Date.now()-i*60000 }, d)));
+  save(LS.works, works);
+  // 给示例作品预置一些投票，便于演示排行榜
+  const votes = allVotes();
+  const pre = [['demo0',5],['demo0',5],['demo0',4],['demo1',5],['demo1',4],['demo2',5],['demo2',5],['demo3',4]];
+  pre.forEach((p, i) => votes['seed'+i] = { workId: p[0], score: p[1] });
+  save(LS.votes, votes);
+  renderExpo();
+  toast('✨ 已载入4件示例作品和演示投票');
+}
+
+/* =====================================================
+   Tab 3：公约投票
+===================================================== */
+const CLAUSES = [
+  { ico:'🏷️', name:'诚实标注', text:'使用AI完成的作品要注明"AI辅助制作"，不把AI生成的内容说成完全原创。' },
+  { ico:'🧠', name:'独立思考', text:'先自己思考，再问AI；不把AI的答案直接复制当成作业上交。' },
+  { ico:'🔍', name:'核实信息', text:'AI给的答案要查证，重要信息至少查找两个可靠来源再使用。' },
+  { ico:'🔒', name:'保护隐私', text:'不把自己的和同学的真实个人信息（姓名、照片、住址等）输入给AI。' },
+  { ico:'©️', name:'尊重版权', text:'不随意传播他人作品，引用图片、文字时要说明来源和出处。' },
+  { ico:'⚖️', name:'负责任使用', text:'不用AI做伤害、欺骗、欺负别人的事，发现滥用AI的行为要善意提醒。' },
+];
+let myPicks = new Set();
+
+function renderPact() {
+  const list = document.getElementById('clauseList');
+  list.innerHTML = '';
+  CLAUSES.forEach((c, i) => {
+    const el = document.createElement('div');
+    const voted = !!load(LS.myBallot);
+    el.className = 'clause' + (myPicks.has(i) ? ' picked' : '') + (voted ? ' locked' : '');
+    el.onclick = () => togglePick(i);
+    el.innerHTML = `
+      <div class="clause-check">✔</div>
+      <div class="clause-head"><span class="clause-ico">${c.ico}</span><span class="clause-name">${i+1}. ${c.name}</span></div>
+      <div class="clause-text">${c.text}</div>`;
+    list.appendChild(el);
+  });
+  document.getElementById('pickCount').textContent = myPicks.size;
+  document.getElementById('voteStatus').textContent = load(LS.myBallot)
+    ? '✅ 你已完成投票（' + load(LS.myBallot).picks.length + ' 条）· 感谢参与班级公约制定'
+    : '你还没有投票';
+  renderPactResults();
+}
+function togglePick(i) {
+  if (load(LS.myBallot)) return toast('你已经投过票了，每人限投一票');
+  if (myPicks.has(i)) myPicks.delete(i);
+  else {
+    if (myPicks.size >= 5) return toast('⚠️ 最多只能选5条，请先取消一条');
+    myPicks.add(i);
+  }
+  renderPact();
+}
+function submitVote() {
+  if (load(LS.myBallot)) return toast('你已经投过票了');
+  if (myPicks.size === 0) return toast('⚠️ 请至少勾选1条条款');
+  const name = document.getElementById('voterName').value.trim();
+  const ballots = load(LS.ballots) || [];
+  const picks = [...myPicks];
+  ballots.push({ name, picks });
+  save(LS.ballots, ballots);
+  save(LS.myBallot, { picks });
+  renderPact();
+  toast('🗳️ 投票成功！你的选择将写入班级AI公约');
+}
+function renderPactResults() {
+  const ballots = load(LS.ballots) || [];
+  document.getElementById('totalBallots').textContent = ballots.length;
+  const counts = CLAUSES.map((_, i) => ballots.filter(b => b.picks.includes(i)).length);
+  const order = counts.map((c, i) => ({ i, c })).sort((a, b) => b.c - a.c);
+  const winSet = new Set(order.slice(0, 5).filter(x => x.c > 0).map(x => x.i));
+  const list = document.getElementById('resultList');
+  list.innerHTML = '';
+  CLAUSES.forEach((c, i) => {
+    const pct = ballots.length ? Math.round(counts[i] / ballots.length * 100) : 0;
+    const row = document.createElement('div');
+    row.className = 'result-row' + (winSet.has(i) ? ' win' : '');
+    row.innerHTML = `
+      <div class="result-top">
+        <b>${c.ico} ${i+1}. ${c.name}${winSet.has(i) ? '<span class="win-badge">🏅 当选</span>' : ''}</b>
+        <span><span class="result-pct">${pct}%</span> · ${counts[i]}票</span>
+      </div>
+      <div class="result-bar-bg"><div class="result-bar" style="width:${pct}%"></div></div>`;
+    list.appendChild(row);
+  });
+}
+
+/* =====================================================
+   Tab 4：证书
+===================================================== */
+function initCertDate() {
+  const d = new Date();
+  document.getElementById('cDate').value = d.toISOString().slice(0, 10);
+}
+function drawCert() {
+  const name = document.getElementById('cName').value.trim() || '同学姓名';
+  const type = document.getElementById('cType').value;
+  const date = document.getElementById('cDate').value || new Date().toISOString().slice(0, 10);
+  const c = document.getElementById('certCanvas');
+  const x = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  // 底色
+  x.fillStyle = '#FDFBF2'; x.fillRect(0, 0, W, H);
+  // 角落装饰渐变
+  const corners = [[0,0],[W,0],[0,H],[W,H]];
+  corners.forEach(([cx, cy], idx) => {
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, 340);
+    g.addColorStop(0, 'rgba(99,153,34,0.16)'); g.addColorStop(1, 'rgba(99,153,34,0)');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+  });
+  // 双边框
+  x.strokeStyle = '#639922'; x.lineWidth = 10; x.strokeRect(36, 36, W-72, H-72);
+  x.strokeStyle = '#c9a227'; x.lineWidth = 2.5; x.strokeRect(54, 54, W-108, H-108);
+  // 四角饰花
+  x.fillStyle = '#c9a227';
+  [[70,70],[W-70,70],[70,H-70],[W-70,H-70]].forEach(([px,py]) => {
+    x.beginPath(); x.arc(px, py, 7, 0, Math.PI*2); x.fill();
+  });
+  // 顶部徽章
+  x.textAlign = 'center';
+  x.beginPath(); x.arc(W/2, 165, 62, 0, Math.PI*2);
+  x.fillStyle = '#fff'; x.fill();
+  x.lineWidth = 5; x.strokeStyle = '#639922'; x.stroke();
+  x.beginPath(); x.arc(W/2, 165, 50, 0, Math.PI*2);
+  x.lineWidth = 1.5; x.strokeStyle = '#c9a227'; x.stroke();
+  x.fillStyle = '#4a7a15'; x.font = 'bold 26px "Microsoft YaHei"';
+  x.fillText('AI×APEC', W/2, 160);
+  x.font = '13px "Microsoft YaHei"';
+  x.fillText('2026·深圳', W/2, 185);
+  // 标题
+  x.fillStyle = '#2b5e12';
+  x.font = 'bold 58px "Microsoft YaHei"';
+  const isAward = type !== '结业证书';
+  x.fillText(isAward ? type : '学 习 结 业 证 书', W/2, 300);
+  // 副标
+  x.fillStyle = '#639922'; x.font = '19px "Microsoft YaHei"';
+  x.fillText('——《AI遇见APEC》人工智能六课时单元——', W/2, 345);
+  // 正文
+  x.fillStyle = '#3a3a2e'; x.font = '24px "Microsoft YaHei"';
+  x.fillText('兹证明', W/2, 420);
+  x.fillStyle = '#1d3d0d'; x.font = 'bold 72px "KaiTi","STKaiti","Microsoft YaHei"';
+  x.fillText(name, W/2, 510);
+  // 姓名下划线
+  x.strokeStyle = '#c9a227'; x.lineWidth = 2;
+  const nw = Math.max(name.length * 66, 190);
+  x.beginPath(); x.moveTo(W/2 - nw/2, 538); x.lineTo(W/2 + nw/2, 538); x.stroke();
+  x.fillStyle = '#3a3a2e'; x.font = '23px "Microsoft YaHei"';
+  const line1 = isAward ? '同学在本单元学习中表现优异，荣获此奖，特发此证！'
+                        : '同学完成本单元全部六课时学习，经考核合格，特发此证。';
+  x.fillText(line1, W/2, 600);
+  x.fillStyle = '#66705a'; x.font = '17px "Microsoft YaHei"';
+  x.fillText('六课时的旅程：认识AI · AI绘画 · 数据可视化 · AI编程 · AI智能体 · 成果展与伦理论坛', W/2, 650);
+  // 日期与落款
+  x.fillStyle = '#3a3a2e'; x.font = '20px "Microsoft YaHei"';
+  x.fillText('颁发日期：' + date, W/2 - 260, 800);
+  x.fillText('深圳大学附属教育集团外国语中学　帅颖', W/2 + 260, 800);
+  // 印章
+  const sx = W/2 + 260, sy = 860;
+  x.beginPath(); x.arc(sx, sy, 62, 0, Math.PI*2);
+  x.strokeStyle = 'rgba(216,90,48,.85)'; x.lineWidth = 4; x.stroke();
+  x.beginPath(); x.arc(sx, sy, 52, 0, Math.PI*2);
+  x.lineWidth = 1.5; x.stroke();
+  x.fillStyle = 'rgba(216,90,48,.9)';
+  x.font = 'bold 20px "Microsoft YaHei"';
+  x.fillText('深圳大学附属', sx, sy - 10);
+  x.font = 'bold 15px "Microsoft YaHei"';
+  x.fillText('外国语中学', sx, sy + 12);
+  // 底部寄语
+  x.fillStyle = '#8a9480'; x.font = 'italic 16px "Microsoft YaHei"';
+  x.fillText('AI是工具不是替身 · 用AI要负责 · 人永远是主导者', W/2, 920);
+}
+function downloadCert() {
+  drawCert();
+  const a = document.createElement('a');
+  const name = document.getElementById('cName').value.trim() || '我的';
+  a.download = name + '_AI遇见APEC_' + document.getElementById('cType').value + '.png';
+  a.href = document.getElementById('certCanvas').toDataURL('image/png');
+  a.click();
+  toast('⬇️ 证书已开始下载');
+}
+function printCert() {
+  drawCert();
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>打印证书</title><style>body{margin:0;display:flex;justify-content:center}img{width:100%;max-width:900px}</style></head>
+    <body><img src="${document.getElementById('certCanvas').toDataURL()}" onload="window.print()"></body></html>`);
+  win.document.close();
+}
+
+/* =====================================================
+   教师工具
+===================================================== */
+function exportData() {
+  const data = {};
+  Object.values(LS).forEach(k => data[k] = load(k));
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.download = 'APEC数字博览会数据_' + new Date().toISOString().slice(0,10) + '.json';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  toast('📤 数据已导出为JSON文件');
+}
+function importData(input) {
+  const f = input.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      let n = 0;
+      Object.keys(LS).forEach(key => { if (data[LS[key]] !== undefined && data[LS[key]] !== null) { save(LS[key], data[LS[key]]); n++; } });
+      renderAll();
+      toast('📥 导入成功，恢复了 ' + n + ' 类数据');
+    } catch (err) { toast('⚠️ 文件格式不正确'); }
+    input.value = '';
+  };
+  reader.readAsText(f);
+}
+function resetAll() {
+  if (!confirm('⚠️ 确定清空本机的全部数据（作品/投票/勾选）吗？建议先导出备份！')) return;
+  if (!confirm('再次确认：清空后无法恢复，真的要清空吗？')) return;
+  Object.values(LS).forEach(k => localStorage.removeItem(k));
+  myPicks = new Set();
+  renderAll();
+  toast('🗑️ 已清空本机全部数据');
+}
+
+/* =====================================================
+   初始化
+===================================================== */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function renderAll() {
+  renderJourney(); renderExpo(); renderPact(); drawCert();
+}
+initCertDate();
+renderAll();
+</script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

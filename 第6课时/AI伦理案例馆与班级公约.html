@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 伦理案例馆与班级公约 · AI 的双面性 | AI遇见APEC 第6课时</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --main:#639922;--main2:#84A62B;--accent:#C9A227;
+    --soft:#F2F7E8;--ink:#2B3320;--muted:#7A8470;--line:#DDE6CC;--card:#fff;
+    --ok:#15803D;--ok-soft:#ECFDF5;--warn:#B45309;--warn-soft:#FFFBEB;--bad:#B91C1C;--bad-soft:#FEF2F2;
+  }
+  body{font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+    background:#F6F8F2;color:var(--ink);line-height:1.85;padding-bottom:50px}
+  .hd{background:linear-gradient(135deg,#1C2A0B,var(--main) 55%,var(--accent));color:#fff;
+    padding:26px 20px 22px;position:relative;overflow:hidden}
+  .hd::after{content:"";position:absolute;right:-50px;top:-70px;width:240px;height:240px;
+    border-radius:50%;background:rgba(255,255,255,.09)}
+  .hd-in{max-width:1000px;margin:0 auto;position:relative;z-index:2}
+  .hd .tag{font-size:12.5px;letter-spacing:2px;opacity:.92}
+  .hd h1{font-size:25px;margin:6px 0}
+  .hd p{font-size:13.5px;opacity:.94;max-width:780px}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;
+    box-shadow:0 8px 24px rgba(43,51,32,.06);margin-bottom:16px}
+  .card h2{font-size:16.5px;display:flex;align-items:center;gap:9px}
+  .card h2 .n{width:28px;height:28px;border-radius:9px;background:var(--soft);color:var(--main);
+    font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .card .sub{font-size:13px;color:var(--muted);margin:4px 0 12px}
+  .cases{display:grid;gap:14px}
+  .case{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .case-h{padding:13px 16px;background:linear-gradient(90deg,var(--soft),#fff);
+    display:flex;align-items:center;gap:11px;cursor:pointer}
+  .case-h .ico{width:36px;height:36px;border-radius:11px;background:#fff;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+  .case-h b{font-size:15px}
+  .case-h small{display:block;font-size:12.5px;color:var(--muted);font-weight:400}
+  .case-h .arw{margin-left:auto;color:var(--main);font-weight:800;transition:.2s}
+  .case.on .case-h .arw{transform:rotate(90deg)}
+  .case-b{display:none;padding:14px 16px;border-top:1px solid var(--line);background:#fff}
+  .case.on .case-b{display:block}
+  .case-b .q{background:var(--warn-soft);border:1px solid #FDE68A;border-radius:11px;
+    padding:10px 13px;font-size:13.5px;color:#78350F;margin-bottom:11px}
+  .case-b .q b{color:#92400E}
+  .rows{display:grid;gap:8px}
+  .row{display:grid;grid-template-columns:104px 1fr;gap:11px;font-size:13.5px;
+    border-bottom:1px dashed var(--line);padding-bottom:8px}
+  .row b{color:var(--main);font-size:13px}
+  .row:last-child{border-bottom:none;padding-bottom:0}
+  .qitem{border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:11px}
+  .qitem p.t{font-size:14.5px;font-weight:600;margin-bottom:9px}
+  .opts{display:flex;flex-wrap:wrap;gap:8px}
+  .opt{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 15px;
+    font-size:13.5px;cursor:pointer;font-family:inherit;transition:.16s}
+  .opt:hover{border-color:var(--main);color:var(--main)}
+  .opt.ok{border-color:#6EE7B7;background:var(--ok-soft);color:var(--ok);font-weight:700}
+  .opt.no{border-color:#FCA5A5;background:var(--bad-soft);color:var(--bad)}
+  .fb{font-size:13px;margin-top:9px;display:none}
+  .fb.show{display:block}
+  .fb.ok{color:var(--ok)} .fb.no{color:var(--bad)}
+  /* 辩论 */
+  .sides{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .side{border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:.18s;background:#fff}
+  .side h4{font-size:14.5px;margin-bottom:8px}
+  .side ul{padding-left:18px;font-size:13.5px;color:#4B5563}
+  .side li{margin:4px 0}
+  .side.pro{border-color:#BFDBFE}
+  .side.con{border-color:#FECACA}
+  .side.on.pro{background:#EFF6FF;border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+  .side.on.con{background:#FEF2F2;border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+  .stance{margin-top:13px;font-size:13.5px;color:var(--muted)}
+  textarea,input[type=text]{width:100%;border:1.5px solid var(--line);border-radius:11px;
+    padding:10px 13px;font-size:14px;font-family:inherit;line-height:1.8;resize:vertical;outline:none;color:var(--ink)}
+  textarea:focus,input:focus{border-color:var(--main);box-shadow:0 0 0 3px var(--soft)}
+  /* 公约 */
+  .pactlist{display:grid;gap:9px}
+  .pitem{display:grid;grid-template-columns:30px 1fr 132px;gap:11px;align-items:center;
+    border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:#fff}
+  .pitem .idx{width:30px;height:30px;border-radius:9px;background:var(--soft);color:var(--main);
+    font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .pitem .txt{font-size:14px}
+  .pitem select{border:1.5px solid var(--line);border-radius:9px;padding:6px 9px;font-size:13px;
+    font-family:inherit;background:#fff;color:var(--ink);width:100%}
+  .pitem.keep{border-color:#A7F3D0;background:var(--ok-soft)}
+  .pitem.drop{border-color:#FCA5A5;background:var(--bad-soft);opacity:.72}
+  .out{margin-top:14px;background:#0F172A;color:#E2E8F0;border-radius:12px;padding:16px;
+    font-size:13.5px;line-height:2;white-space:pre-wrap;min-height:80px}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .btn{border:none;border-radius:10px;padding:9px 18px;font-size:13.5px;font-weight:700;
+    cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--main),var(--main2));color:#fff}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:#fff;color:var(--main);border:1.5px solid var(--line)}
+  .tip{background:var(--ok-soft);border:1px solid #A7F3D0;border-radius:12px;padding:12px 15px;
+    font-size:13.5px;color:#14532D;margin-top:12px;line-height:1.8}
+  .tip.warn{background:var(--warn-soft);border-color:#FDE68A;color:#78350F}
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .sign .line{border-bottom:1px solid #C7C9D9;height:36px}
+  .sign label{font-size:12.5px;color:var(--muted)}
+  .foot{text-align:center;font-size:12.5px;color:var(--muted);margin-top:22px;line-height:1.9}
+  .foot a{color:var(--main)}
+  @media(max-width:760px){
+    .sides{grid-template-columns:1fr}
+    .pitem{grid-template-columns:30px 1fr;row-gap:8px}
+    .pitem select{grid-column:2}
+    .sign{grid-template-columns:1fr}
+  }
+  @media print{ .btns,.foot{display:none} body{background:#fff} }
+</style>
+</head>
+<body>
+
+<header class="hd"><div class="hd-in">
+  <div class="tag">AI遇见APEC · 第6课时 · 配套学习资源</div>
+  <h1>⚖️ AI 伦理案例馆 与 班级 AI 公约</h1>
+  <p>AI 很强大，但也有风险。先走进三个真实案例，看清 AI 的“两面”；
+     再站上辩论台，为你的观点找理由；最后，一起把想法变成我们班自己的规则。</p>
+</div></header>
+
+<div class="wrap">
+
+  <!-- 1. 案例馆 -->
+  <div class="card">
+    <h2><span class="n">1</span>案例馆：点开卡片，看清风险</h2>
+    <div class="sub">三个案例，对应三类最常见的 AI 伦理风险。先自己想一想，再点开看解析。</div>
+    <div class="cases" id="cases"></div>
+  </div>
+
+  <!-- 2. 风险识别 -->
+  <div class="card">
+    <h2><span class="n">2</span>辨一辨：这属于哪类风险？</h2>
+    <div class="sub">判断风险类型，再选出最合适的应对策略。</div>
+    <div id="quizbox"></div>
+  </div>
+
+  <!-- 3. 辩论 -->
+  <div class="card">
+    <h2><span class="n">3</span>辩论台：AI 作品应该标注“AI 制作”吗？</h2>
+    <div class="sub">点选你的立场（也可以两边都看看），再写下理由，最后生成一段可以照着念的发言。</div>
+    <div class="sides" id="sides">
+      <div class="side pro" data-side="正方">
+        <h4>🟦 正方：应该标注</h4>
+        <ul>
+          <li>透明度：别人有权知道作品怎么来的</li>
+          <li>学术诚信：作业不标注等于抄袭</li>
+          <li>保护原创者：不标注可能挤占人工创作者的空间</li>
+          <li>可追溯：出了问题能追溯、能改进</li>
+        </ul>
+      </div>
+      <div class="side con" data-side="反方">
+        <h4>🟥 反方：不需要标注</h4>
+        <ul>
+          <li>AI 是工具：用计算器不需要标注“计算器辅助”</li>
+          <li>创作有人参与：Prompt 是人写的，选择是人做的</li>
+          <li>标注增加成本：每件作品都标注太麻烦</li>
+          <li>看结果不看过程：作品好坏看质量</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stance" id="stance">我的立场：还未选择</div>
+    <div style="margin-top:12px">
+      <label style="font-size:13px;color:var(--muted)">我最有力的理由（写下来，辩论时照着说）</label>
+      <textarea id="reason" rows="3" placeholder="例如：我认为必须标注，因为……"></textarea>
+    </div>
+    <div style="margin-top:12px">
+      <label style="font-size:13px;color:var(--muted)">我想到的折中方案（什么情况必须标注？什么情况可以不标注？）</label>
+      <textarea id="middle" rows="3" placeholder="例如：作业、论文、新闻报道必须标注；个人练习、日记式的创作可以不标注……"></textarea>
+    </div>
+    <div class="btns">
+      <button class="btn" id="btnSpeech">📋 生成我的辩论发言</button>
+    </div>
+    <div class="out" id="speech" style="display:none"></div>
+    <div class="tip">
+      <b>小结：</b>这个问题没有标准答案，不同场景有不同的答案。
+      但有一条原则是共识——<b>人要为自己的作品负责。AI 是助手不是替身。</b>
+    </div>
+  </div>
+
+  <!-- 4. 公约 -->
+  <div class="card">
+    <h2><span class="n">4</span>班级 AI 使用公约：一起定规则</h2>
+    <div class="sub">逐条选择“保留 / 修改 / 删除”，也可以在最后补充自己班的条目；确认后生成公约文本，复制或打印张贴。</div>
+    <div class="pactlist" id="pactlist"></div>
+    <div style="margin-top:12px">
+      <label style="font-size:13px;color:var(--muted)">我们班补充的第 7 条（可选）</label>
+      <input type="text" id="extra" placeholder="例如：在使用 AI 完成的作业上，要简要说明 AI 帮了什么忙">
+    </div>
+    <div class="btns">
+      <button class="btn" id="btnPact">📜 生成我们班的 AI 公约</button>
+      <button class="btn ghost" id="btnPactCopy">📋 复制公约文本</button>
+      <button class="btn ghost" id="btnPactPrint">🖨️ 打印 / 导出 PDF</button>
+    </div>
+    <div class="out" id="pact" style="display:none"></div>
+    <div class="sign" id="signbox" style="display:none">
+      <div><label>班级</label><div class="line"></div></div>
+      <div><label>制定日期</label><div class="line"></div></div>
+      <div><label>班主任签字</label><div class="line"></div></div>
+      <div><label>学生代表签字</label><div class="line"></div></div>
+    </div>
+    <div class="tip">
+      <b>签字的仪式感：</b>全班投票通过后，把公约写在班级公告栏或共享文档里，每位同学签上自己的名字。
+      自己定的规则自己遵守——签字，就是一份承诺。
+    </div>
+  </div>
+
+  <div class="foot">
+    AI遇见APEC · 六课时单元 · 第6课时《成果展与 AI 伦理论坛》配套资源<br>
+    本页面完全离线运行 · <a href="%E7%AC%AC6%E8%AF%BE%E6%97%B6_%E7%BD%91%E9%A1%B5%E6%95%99%E6%9D%90_%E6%88%90%E6%9E%9C%E5%B1%95%E4%B8%8EAI%E4%BC%A6%E7%90%86%E8%AE%BA%E5%9D%9B.html">返回本课网页教材</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ---------------- 案例 ---------------- */
+  var CASES = [
+    {
+      ico:'👔', title:'案例一：AI 画的“CEO”，为什么大多是同一个样子？',
+      small:'算法偏见 · 不公平',
+      q:'有人反复让 AI 生成“一个 CEO 的画像”，结果绝大多数都是白人男性。这是 AI 故意歧视吗？',
+      rows:[
+        ['发生了什么','AI 生成的人物形象高度单一，缺少多样化的性别与族裔。'],
+        ['原因','训练数据中 CEO 的图像本身就多为白人男性，AI 学到了这个“模式”并把它放大。'],
+        ['这叫什么','算法偏见——不是 AI 故意歧视，而是数据偏差被放大。'],
+        ['怎么应对','知道 AI 可能有偏见；重要决策不能只听 AI 的；发现偏见要主动质疑。']
+      ]
+    },
+    {
+      ico:'📰', title:'案例二：AI 写的“新闻”，看起来很真',
+      small:'AI 幻觉 · 不可靠',
+      q:'AI 写了一篇关于“某名人去世”的新闻，时间、地点、细节一应俱全，看起来非常真实——但完全是虚构的。怎么判断真假？',
+      rows:[
+        ['发生了什么','AI 生成了细节丰富、读起来非常可信的虚假信息。'],
+        ['原因','AI 的目标是“生成看起来合理的内容”，而不是“说真话”。'],
+        ['这叫什么','AI 幻觉——一本正经地胡说八道。'],
+        ['怎么应对','交叉验证：查多个来源、查原始出处、不轻信单一来源；不转发未核实的信息。']
+      ]
+    },
+    {
+      ico:'📞', title:'案例三：用 AI 模仿家人的声音打电话',
+      small:'技术滥用 · 不安全',
+      q:'有骗子用 AI 模仿他人（甚至家人）的声音打电话索要钱财，声音听起来几乎一模一样。你怎么分辨？',
+      rows:[
+        ['发生了什么','技术被用于伪造声音，实施诈骗、侵犯他人权益。'],
+        ['原因','技术本身是中性的，但可以被滥用——深度伪造、诈骗、侵犯隐私。'],
+        ['这叫什么','技术滥用——技术是双刃剑，需要规则来约束。'],
+        ['怎么应对','保护个人信息（声音、照片、视频不随意公开）；多渠道确认（回拨电话、问只有家人知道的问题）。']
+      ]
+    }
+  ];
+  var cbox = document.getElementById('cases');
+  CASES.forEach(function(c){
+    var d = document.createElement('div');
+    d.className = 'case';
+    d.innerHTML = '<div class="case-h"><div class="ico">' + c.ico + '</div><div><b>' + c.title +
+      '</b><small>' + c.small + '</small></div><span class="arw">▸</span></div>' +
+      '<div class="case-b"><div class="q"><b>想一想：</b>' + c.q + '</div><div class="rows">' +
+      c.rows.map(function(r){ return '<div class="row"><b>' + r[0] + '</b><div>' + r[1] + '</div></div>'; }).join('') +
+      '</div></div>';
+    d.querySelector('.case-h').addEventListener('click', function(){ d.classList.toggle('on'); });
+    cbox.appendChild(d);
+  });
+
+  /* ---------------- 风险识别小测 ---------------- */
+  var TYPES = ['算法偏见','AI 幻觉','技术滥用'];
+  var QS = [
+    { q:'AI 生成的“医生”图片几乎全是男性，这属于哪类风险？', a:'算法偏见',
+      fb:'这是训练数据中的偏差被放大，属于算法偏见。' },
+    { q:'AI 一本正经地介绍了一个根本不存在的“APEC 会议”，这属于哪类风险？', a:'AI 幻觉',
+      fb:'生成了看似合理、实际不存在的信息，是典型的 AI 幻觉。' },
+    { q:'有人用 AI 伪造同学的照片做成不良视频，这属于哪类风险？', a:'技术滥用',
+      fb:'把技术用于侵权、伤害他人，属于技术滥用。' },
+    { q:'面对上面这些风险，最通用的一条应对原则是？', a:'批判性思维，重要信息交叉验证',
+      fb:'不盲信 AI、交叉验证、标注来源、保护隐私——这是应对的总策略。' }
+  ];
+  var TYPES2 = TYPES.concat(['批判性思维，重要信息交叉验证']);
+  var qbox = document.getElementById('quizbox');
+  QS.forEach(function(item, i){
+    var d = document.createElement('div');
+    d.className = 'qitem';
+    d.innerHTML = '<p class="t">Q' + (i+1) + '. ' + item.q + '</p><div class="opts">' +
+      TYPES2.map(function(t){ return '<button class="opt" data-t="' + esc(t) + '">' + t + '</button>'; }).join('') +
+      '</div><div class="fb"></div>';
+    var done = false;
+    d.querySelectorAll('.opt').forEach(function(b){
+      b.addEventListener('click', function(){
+        if(done) return; done = true;
+        var pick = b.getAttribute('data-t');
+        var ok = pick === item.a;
+        b.classList.add(ok ? 'ok' : 'no');
+        if(!ok) d.querySelectorAll('.opt').forEach(function(o){
+          if(o.getAttribute('data-t') === item.a) o.classList.add('ok');
+        });
+        var fb = d.querySelector('.fb');
+        fb.classList.add('show', ok ? 'ok' : 'no');
+        fb.textContent = (ok ? '✅ 答对了！' : '❌ 正确答案是「' + item.a + '」。') + item.fb;
+      });
+    });
+    qbox.appendChild(d);
+  });
+
+  /* ---------------- 辩论 ---------------- */
+  var side = '';
+  document.querySelectorAll('.side').forEach(function(s){
+    s.addEventListener('click', function(){
+      document.querySelectorAll('.side').forEach(function(x){ x.classList.remove('on'); });
+      s.classList.add('on'); side = s.getAttribute('data-side');
+      document.getElementById('stance').innerHTML = '我的立场：<b style="color:#639922">' + side + '</b>';
+    });
+  });
+  document.getElementById('btnSpeech').addEventListener('click', function(){
+    var r = document.getElementById('reason').value.trim();
+    var m = document.getElementById('middle').value.trim();
+    if(!side){ alert('请先选择你的立场（正方 / 反方）。'); return; }
+    var txt = '【我的辩论发言】\n\n'
+      + '我持' + side + '观点：' + (side === '正方' ? 'AI 生成的作品应该标注“AI 制作”。' : 'AI 生成的作品不需要特别标注。') + '\n\n'
+      + '我的理由：' + (r || '（请在上方写下你的理由）') + '\n\n'
+      + '我认为的折中方案：' + (m || '（请在上方写下你的折中方案）') + '\n\n'
+      + '我认同的底线：人要为自己的作品负责——不管用不用 AI，作品的质量和真实性都由人来保证。';
+    var box = document.getElementById('speech');
+    box.style.display = 'block';
+    box.textContent = txt;
+  });
+
+  /* ---------------- 班级公约 ---------------- */
+  var ITEMS = [
+    '使用 AI 生成的内容要在作品中标注“AI 辅助生成”',
+    '不用 AI 直接完成需要自己思考的作业（如读后感、数学证明）',
+    '不用 AI 生成虚假信息或冒充他人',
+    '不向 AI 输入自己或他人的隐私信息（姓名、电话、住址等）',
+    '对 AI 输出的内容保持批判性思维，重要信息要交叉验证',
+    '尊重原创，AI 生成的作品不代表完全原创'
+  ];
+  var plist = document.getElementById('pactlist');
+  ITEMS.forEach(function(t, i){
+    var d = document.createElement('div');
+    d.className = 'pitem keep';
+    d.innerHTML = '<div class="idx">' + (i+1) + '</div><div class="txt">' + t + '</div>' +
+      '<select data-i="' + i + '"><option value="keep">✔ 保留</option>' +
+      '<option value="edit">✎ 修改</option><option value="drop">✘ 删除</option></select>';
+    plist.appendChild(d);
+    d.querySelector('select').addEventListener('change', function(){
+      d.classList.remove('keep','drop');
+      d.classList.add(this.value === 'drop' ? 'drop' : 'keep');
+    });
+  });
+  function pactText(){
+    var lines = ['【我们的班级 AI 使用公约】', ''];
+    var n = 1;
+    ITEMS.forEach(function(t, i){
+      var sel = plist.querySelector('select[data-i="' + i + '"]');
+      if(!sel || sel.value === 'drop') return;
+      lines.push((n++) + '. ' + t);
+    });
+    var ex = document.getElementById('extra').value.trim();
+    if(ex) lines.push((n++) + '. ' + ex);
+    if(n === 1) lines.push('（还没有保留任何条目，请先选择要保留的条目）');
+    lines.push('');
+    lines.push('我们承诺：用 AI 提高效率，也用自己的判断保证质量；');
+    lines.push('负责任地使用 AI，让技术真正帮我们学得更好。');
+    lines.push('');
+    lines.push('班级：____________　日期：____________');
+    lines.push('全班同学签字：________________________________________________');
+    return lines.join('\n');
+  }
+  document.getElementById('btnPact').addEventListener('click', function(){
+    var box = document.getElementById('pact');
+    box.style.display = 'block';
+    box.textContent = pactText();
+    document.getElementById('signbox').style.display = 'grid';
+    box.scrollIntoView({ behavior:'smooth', block:'center' });
+  });
+  document.getElementById('btnPactCopy').addEventListener('click', function(){
+    var t = pactText(), b = this, old = b.textContent;
+    var done = function(){ b.textContent = '✅ 已复制'; setTimeout(function(){ b.textContent = old; }, 1700); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done, function(){ fb(t, done); });
+    } else fb(t, done);
+  });
+  document.getElementById('btnPactPrint').addEventListener('click', function(){
+    document.getElementById('pact').style.display = 'block';
+    document.getElementById('pact').textContent = pactText();
+    document.getElementById('signbox').style.display = 'grid';
+    setTimeout(function(){ window.print(); }, 200);
+  });
+  function fb(text, cb){
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); cb(); }catch(e){ alert('请手动复制'); }
+    document.body.removeChild(ta);
+  }
+
+  // 默认展开第一个案例
+  cbox.firstChild.classList.add('on');
+})();
+</script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

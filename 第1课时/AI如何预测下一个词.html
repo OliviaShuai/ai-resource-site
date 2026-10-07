@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大模型是怎么"算"出答案的</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f0f4ff;
+      color: #1e293b;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 820px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 28px; }
+    header h1 {
+      font-size: 24px;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header p { color: #64748b; font-size: 14px; margin-top: 6px; }
+
+    /* 步骤导航 */
+    .steps-nav {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .step-dot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid rgba(99,102,241,0.15);
+      background: #fff;
+      font-size: 13px;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .step-dot .num {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-dot.active {
+      border-color: #6366f1;
+      background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(236,72,153,0.05));
+      color: #6366f1;
+    }
+    .step-dot.active .num {
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      color: #fff;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(99,102,241,0.08);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h2 .badge {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      color: #fff;
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .card .subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 16px;
+      padding-left: 36px;
+    }
+
+    /* Token 流 */
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .flow-token {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .flow-token .t-text {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .flow-token .t-id {
+      font-size: 11px;
+      color: #64748b;
+      font-family: "Consolas", monospace;
+    }
+    .arrow {
+      color: #cbd5e1;
+      font-size: 18px;
+      padding: 0 2px;
+    }
+
+    /* 概率条 */
+    .prob-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .prob-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .prob-label {
+      width: 60px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .prob-bar-track {
+      flex: 1;
+      height: 32px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    .prob-bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+      min-width: 40px;
+    }
+    .prob-row.dim .prob-bar-fill { opacity: 0.4; }
+
+    /* 接龙演示 */
+    .relay-box {
+      padding: 18px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid rgba(99,102,241,0.1);
+      line-height: 2;
+      font-size: 16px;
+      min-height: 60px;
+      word-break: break-all;
+    }
+    .relay-done {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .relay-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 20px;
+      background: #6366f1;
+      vertical-align: middle;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .relay-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .relay-option {
+      padding: 8px 16px;
+      border: 1.5px solid rgba(99,102,241,0.15);
+      border-radius: 10px;
+      background: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .relay-option:hover {
+      border-color: #6366f1;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.1);
+    }
+    .relay-option .opt-prob {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-left: 6px;
+    }
+
+    .btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn.secondary {
+      background: #fff;
+      color: #6366f1;
+      border: 1.5px solid rgba(99,102,241,0.2);
+    }
+
+    /* 对比卡片 */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .compare-card {
+      padding: 16px;
+      border-radius: 10px;
+      border: 1.5px solid;
+    }
+    .compare-card.left {
+      border-color: rgba(99,102,241,0.2);
+      background: rgba(99,102,241,0.04);
+    }
+    .compare-card.right {
+      border-color: rgba(236,72,153,0.2);
+      background: rgba(236,72,153,0.04);
+    }
+    .compare-card h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .compare-card p {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.7;
+    }
+    .compare-card .example {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 12px;
+      color: #1e293b;
+      line-height: 1.6;
+    }
+
+    /* 提示框 */
+    .tip-box {
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: rgba(99,102,241,0.06);
+      border-left: 3px solid #6366f1;
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.8;
+      margin-top: 16px;
+    }
+    .tip-box strong { color: #1e293b; }
+
+    /* Token id 表 */
+    .vocab-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .vocab-table th {
+      background: rgba(99,102,241,0.06);
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 1px solid rgba(99,102,241,0.1);
+    }
+    .vocab-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .vocab-table .id-col {
+      font-family: "Consolas", monospace;
+      color: #6366f1;
+      font-weight: 700;
+    }
+
+    .hidden { display: none; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    @media (max-width: 600px) {
+      .compare-grid { grid-template-columns: 1fr; }
+      .card { padding: 16px; }
+      .step-dot { padding: 4px 10px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>大模型是怎么"算"出答案的</h1>
+      <p>三个步骤，理解大语言模型的核心原理</p>
+    </header>
+
+    <!-- 步骤导航 -->
+    <div class="steps-nav">
+      <div class="step-dot active" data-step="1">
+        <span class="num">1</span>
+        <span>切 Token · 编码成数字</span>
+      </div>
+      <div class="step-dot" data-step="2">
+        <span class="num">2</span>
+        <span>按概率预测下一个</span>
+      </div>
+      <div class="step-dot" data-step="3">
+        <span class="num">3</span>
+        <span>不理解意思，但能算出答案</span>
+      </div>
+    </div>
+
+    <!-- ==================== 第一步 ==================== -->
+    <div class="section active" id="step1">
+      <div class="card">
+        <h2><span class="badge">1</span> 切 Token、编码成数字</h2>
+        <p class="subtitle">模型不认识文字，只认识数字。所以第一步是把文字变成数字。</p>
+
+        <p style="font-size:14px;color:#475569;margin-bottom:12px;">
+          输入一段文字 → 切成 Token → 每个 Token 查表得到一个数字 ID
+        </p>
+
+        <!-- 文字 → Token → ID 流程 -->
+        <div style="padding:16px;border-radius:10px;background:#f8fafc;border:1px solid rgba(99,102,241,0.1);margin-bottom:16px;">
+          <div style="font-size:13px;color:#64748b;margin-bottom:10px;">原始文本：</div>
+          <div style="font-size:17px;margin-bottom:16px;line-height:1.6;" id="rawText">我喜欢学编程</div>
+
+          <div style="font-size:13px;color:#64748b;margin-bottom:10px;">切成 Token + 编码：</div>
+          <div class="flow-row" id="tokenFlow"></div>
+        </div>
+
+        <!-- 词表 -->
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px;">模型词表（简化版）</div>
+        <p style="font-size:13px;color:#64748b;margin-bottom:8px;">
+          每个模型都有一张"词表"，记录 Token 和数字 ID 的对应关系。真实词表通常有几万个到十几万个 Token。
+        </p>
+        <table class="vocab-table" id="vocabTable">
+          <thead>
+            <tr><th>ID</th><th>Token</th><th>ID</th><th>Token</th></tr>
+          </thead>
+          <tbody id="vocabBody"></tbody>
+        </table>
+
+        <!-- 换一换 -->
+        <div style="margin-top:16px;">
+          <button class="btn secondary" id="changeTextBtn">换一段文字试试</button>
+        </div>
+
+        <div class="tip-box">
+          <strong>关键点：</strong>文字先被切成 Token，再通过词表查到数字 ID。模型从头到尾只和这些数字打交道，<strong>从不直接"看"文字</strong>。
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 第二步 ==================== -->
+    <div class="section" id="step2">
+      <div class="card">
+        <h2><span class="badge">2</span> 按概率预测"最像"的下一个</h2>
+        <p class="subtitle">模型根据上文，算出每个候选 Token 出现的概率，选概率最大的。</p>
+
+        <p style="font-size:14px;color:#475569;margin-bottom:12px;">
+          给定上文，模型会算出"下一个 Token 是什么"的概率分布。
+        </p>
+
+        <!-- 上文 -->
+        <div style="padding:14px;border-radius:10px;background:#f8fafc;border:1px solid rgba(99,102,241,0.1);margin-bottom:16px;">
+          <div style="font-size:13px;color:#64748b;margin-bottom:8px;">当前上文（已生成的 Token）：</div>
+          <div style="font-size:16px;line-height:1.8;" id="contextText">今天天气真</div>
+        </div>
+
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">模型预测下一个 Token 的概率：</div>
+        <div class="prob-list" id="probList"></div>
+
+        <!-- 换例子 -->
+        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn secondary context-btn" data-context="今天天气真">今天天气真…</button>
+          <button class="btn secondary context-btn" data-context="1+1等于">1+1等于…</button>
+          <button class="btn secondary context-btn" data-context="床前明月">床前明月…</button>
+          <button class="btn secondary context-btn" data-context="中国的首都是">中国的首都是…</button>
+        </div>
+
+        <div class="tip-box">
+          <strong>关键点：</strong>模型不是"想"出答案，而是<strong>算</strong>出概率。每个可能的下一个 Token 都有一个概率值，模型选概率最大的那个。这就是"预测最像的下一个"。
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 第三步 ==================== -->
+    <div class="section" id="step3">
+      <div class="card">
+        <h2><span class="badge">3</span> 不理解意思，但能"算"出答案</h2>
+        <p class="subtitle">模型靠统计规律"算"答案，并非真正理解文字含义。</p>
+
+        <!-- 文字接龙演示 -->
+        <div style="padding:16px;border-radius:10px;background:#f8fafc;border:1px solid rgba(99,102,241,0.1);margin-bottom:16px;">
+          <div style="font-size:13px;color:#64748b;margin-bottom:10px;">文字接龙（模拟模型的生成过程）：</div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:8px;">上文：<span style="color:#1e293b;font-weight:500;" id="relayPrompt">床前明月</span></div>
+          <div class="relay-box" id="relayBox"></div>
+          <div class="relay-options" id="relayOptions"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn secondary relay-prompt-btn" data-prompt="床前明月">床前明月…</button>
+          <button class="btn secondary relay-prompt-btn" data-prompt="1+1等于">1+1等于…</button>
+          <button class="btn secondary relay-prompt-btn" data-prompt="中国的首都">中国的首都…</button>
+          <button class="btn" id="relayAutoBtn">自动接龙</button>
+          <button class="btn secondary" id="relayResetBtn">重置</button>
+        </div>
+
+        <!-- 对比：理解 vs 计算 -->
+        <div style="font-size:15px;font-weight:700;margin:24px 0 12px;">人 vs 模型，区别在哪？</div>
+        <div class="compare-grid">
+          <div class="compare-card left">
+            <h3>人类的回答方式</h3>
+            <p>理解意思 → 思考 → 回答</p>
+            <div class="example">
+              问：1+1等于几？<br>
+              人：我知道 1 个苹果加 1 个苹果是 2 个，所以 1+1=2。
+            </div>
+          </div>
+          <div class="compare-card right">
+            <h3>模型的方式</h3>
+            <p>统计规律 → 算概率 → 选最高的</p>
+            <div class="example">
+              问：1+1等于几？<br>
+              模型：训练数据中"1+1等于"后面出现最多的是"2"，概率 92%，选它。
+            </div>
+          </div>
+        </div>
+
+        <div class="tip-box">
+          <strong>关键点：</strong>模型不"懂"你在说什么，它只是在海量训练数据中学会了<strong>"什么样的上文后面最可能跟什么"</strong>。但因为数据量足够大、规律足够多，算出来的答案看起来就像"理解"了一样。
+          <br><br>
+          这也解释了为什么模型有时会"一本正经地胡说八道"——因为它在<strong>算概率</strong>，而不是在<strong>思考</strong>。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // ============================================================
+    // 简化词表（Token → ID 映射）
+    // ============================================================
+    var VOCAB = {
+      '我': 12, '喜': 45, '欢': 46, '学': 78, '编': 203, '程': 204,
+      '今': 56, '天': 57, '气': 58, '真': 59, '好': 60, '热': 61, '冷': 62, '晴': 63,
+      '1': 301, '+': 302, '等': 303, '于': 304, '2': 305, '3': 306,
+      '床': 401, '前': 402, '明': 403, '月': 404, '光': 405, '疑': 406, '是': 407,
+      '地': 408, '上': 409, '霜': 410, '举': 411, '头': 412, '望': 413,
+      '低': 414, '思': 415, '故': 416, '乡': 417,
+      '中': 501, '国': 502, '的': 503, '首': 504, '都': 505,
+      '北': 506, '京': 507, '上': 509, '海': 510, '广': 511, '州': 512,
+      '苹': 601, '果': 602, '很': 603, '甜': 604,
+      '你': 701, '好': 702, '吗': 703,
+      '人': 801, '工': 802, '智': 803, '能': 804,
+    };
+
+    var TEXT_SAMPLES = [
+      '我喜欢学编程',
+      '今天天气真好',
+      '人工智能',
+      '你好吗',
+      '1+1等于2',
+      '苹果很甜',
+    ];
+    var textIdx = 0;
+
+    function getColor(i) {
+      var hue = (i * 47) % 360;
+      return {
+        bg: 'hsl(' + hue + ',70%,90%)',
+        border: 'hsl(' + hue + ',50%,65%)',
+        text: 'hsl(' + hue + ',45%,30%)'
+      };
+    }
+
+    // ============================================================
+    // 第一步：切 Token + 编码
+    // ============================================================
+    function renderStep1() {
+      var text = TEXT_SAMPLES[textIdx];
+      document.getElementById('rawText').textContent = text;
+
+      var chars = Array.from(text);
+      var flow = document.getElementById('tokenFlow');
+      flow.innerHTML = '';
+
+      chars.forEach(function(ch, i) {
+        // 文字 token
+        var c = getColor(i);
+        var tokenEl = document.createElement('div');
+        tokenEl.className = 'flow-token';
+
+        var textEl = document.createElement('div');
+        textEl.className = 't-text';
+        textEl.style.background = c.bg;
+        textEl.style.border = '1px solid ' + c.border;
+        textEl.style.color = c.text;
+        textEl.textContent = ch;
+        tokenEl.appendChild(textEl);
+
+        // ID
+        var idEl = document.createElement('div');
+        idEl.className = 't-id';
+        idEl.textContent = 'ID:' + (VOCAB[ch] || '?');
+        tokenEl.appendChild(idEl);
+
+        flow.appendChild(tokenEl);
+
+        // 箭头（最后一个不加）
+        if (i < chars.length - 1) {
+          var arrow = document.createElement('span');
+          arrow.className = 'arrow';
+          arrow.textContent = '→';
+          flow.appendChild(arrow);
+        }
+      });
+
+      // 词表
+      var vocabBody = document.getElementById('vocabBody');
+      vocabBody.innerHTML = '';
+      var vocabEntries = Object.keys(VOCAB).slice(0, 20);
+      var half = Math.ceil(vocabEntries.length / 2);
+      for (var i = 0; i < half; i++) {
+        var tr = document.createElement('tr');
+        var left = vocabEntries[i];
+        var right = vocabEntries[i + half] || '';
+        tr.innerHTML =
+          '<td class="id-col">' + VOCAB[left] + '</td><td>' + left + '</td>' +
+          (right ? '<td class="id-col">' + VOCAB[right] + '</td><td>' + right + '</td>' : '<td></td><td></td>');
+        vocabBody.appendChild(tr);
+      }
+    }
+
+    document.getElementById('changeTextBtn').addEventListener('click', function() {
+      textIdx = (textIdx + 1) % TEXT_SAMPLES.length;
+      renderStep1();
+    });
+
+    // ============================================================
+    // 第二步：概率预测
+    // ============================================================
+    var CONTEXT_PROBS = {
+      '今天天气真': [
+        { token: '好', prob: 52 },
+        { token: '热', prob: 18 },
+        { token: '冷', prob: 12 },
+        { token: '晴', prob: 10 },
+        { token: '的', prob: 5 },
+        { token: '啊', prob: 3 },
+      ],
+      '1+1等于': [
+        { token: '2', prob: 92 },
+        { token: '1', prob: 3 },
+        { token: '3', prob: 2 },
+        { token: '0', prob: 1 },
+        { token: '几', prob: 1 },
+        { token: '多少', prob: 1 },
+      ],
+      '床前明月': [
+        { token: '光', prob: 88 },
+        { token: '光，', prob: 6 },
+        { token: '时', prob: 3 },
+        { token: '下', prob: 2 },
+        { token: '中', prob: 1 },
+      ],
+      '中国的首都是': [
+        { token: '北京', prob: 85 },
+        { token: '上海', prob: 6 },
+        { token: '南京', prob: 4 },
+        { token: '广州', prob: 3 },
+        { token: '西安', prob: 2 },
+      ],
+    };
+
+    function renderStep2(context) {
+      document.getElementById('contextText').textContent = context;
+
+      var probs = CONTEXT_PROBS[context] || [];
+      var list = document.getElementById('probList');
+      list.innerHTML = '';
+
+      probs.forEach(function(item, i) {
+        var row = document.createElement('div');
+        row.className = 'prob-row';
+        if (i > 0) row.classList.add('dim');
+
+        var label = document.createElement('div');
+        label.className = 'prob-label';
+        label.textContent = item.token;
+        row.appendChild(label);
+
+        var track = document.createElement('div');
+        track.className = 'prob-bar-track';
+        var fill = document.createElement('div');
+        fill.className = 'prob-bar-fill';
+
+        var hue;
+        if (i === 0) {
+          hue = 260;
+        } else {
+          hue = 220 - i * 15;
+        }
+        fill.style.background = i === 0
+          ? 'linear-gradient(135deg, #6366f1, #ec4899)'
+          : 'linear-gradient(135deg, hsl(' + hue + ',60%,55%), hsl(' + hue + ',50%,45%))';
+
+        row.appendChild(track);
+        track.appendChild(fill);
+
+        // 动画延迟设置宽度
+        setTimeout(function() {
+          fill.style.width = Math.max(item.prob, 8) + '%';
+          fill.textContent = item.prob + '%';
+        }, 50 + i * 100);
+
+        list.appendChild(row);
+      });
+    }
+
+    document.querySelectorAll('.context-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        renderStep2(btn.dataset.context);
+      });
+    });
+
+    // ============================================================
+    // 第三步：文字接龙
+    // ============================================================
+    var RELAY_DATA = {
+      '床前明月': [
+        { token: '光', prob: 88 },
+        { token: '光，', prob: 6 },
+        { token: '时', prob: 3 },
+        { token: '下', prob: 2 },
+        { token: '中', prob: 1 },
+      ],
+      '1+1等于': [
+        { token: '2', prob: 92 },
+        { token: '1', prob: 3 },
+        { token: '3', prob: 2 },
+        { token: '0', prob: 2 },
+        { token: '几', prob: 1 },
+      ],
+      '中国的首都': [
+        { token: '是', prob: 80 },
+        { token: '在', prob: 10 },
+        { token: '为', prob: 5 },
+        { token: '叫', prob: 3 },
+        { token: '，', prob: 2 },
+      ],
+    };
+
+    // 接龙后续
+    var RELAY_NEXT = {
+      '光': [
+        { token: '，', prob: 70 },
+        { token: '疑', prob: 20 },
+        { token: '照', prob: 6 },
+        { token: '落', prob: 4 },
+      ],
+      '，': [
+        { token: '疑', prob: 75 },
+        { token: '是', prob: 15 },
+        { token: '好', prob: 5 },
+        { token: '似', prob: 5 },
+      ],
+      '疑': [
+        { token: '是', prob: 85 },
+        { token: '为', prob: 8 },
+        { token: '非', prob: 4 },
+        { token: '如', prob: 3 },
+      ],
+      '是': [
+        { token: '地', prob: 82 },
+        { token: '天', prob: 8 },
+        { token: '月', prob: 5 },
+        { token: '霜', prob: 5 },
+      ],
+      '地': [
+        { token: '上', prob: 88 },
+        { token: '面', prob: 8 },
+        { token: '下', prob: 2 },
+        { token: '前', prob: 2 },
+      ],
+      '上': [
+        { token: '霜', prob: 90 },
+        { token: '的', prob: 5 },
+        { token: '光', prob: 3 },
+        { token: '月', prob: 2 },
+      ],
+      '霜': [
+        { token: '。', prob: 60 },
+        { token: '举', prob: 30 },
+        { token: '，', prob: 8 },
+        { token: '疑', prob: 2 },
+      ],
+      '2': [
+        { token: '。', prob: 50 },
+        { token: '，', prob: 20 },
+        { token: '没错', prob: 15 },
+        { token: '对', prob: 10 },
+        { token: '的', prob: 5 },
+      ],
+      '北京': [
+        { token: '。', prob: 45 },
+        { token: '，', prob: 25 },
+        { token: '，是', prob: 15 },
+        { token: '市', prob: 10 },
+        { token: '人', prob: 5 },
+      ],
+    };
+
+    var relayPrompt = '床前明月';
+    var relayTokens = [];
+
+    function renderRelay() {
+      var box = document.getElementById('relayBox');
+      box.innerHTML = '';
+
+      // 显示 prompt
+      var promptSpan = document.createElement('span');
+      promptSpan.textContent = relayPrompt;
+      promptSpan.style.color = '#94a3b8';
+      box.appendChild(promptSpan);
+
+      // 已选 token
+      relayTokens.forEach(function(t, i) {
+        var c = getColor(i + relayPrompt.length);
+        var span = document.createElement('span');
+        span.className = 'relay-done';
+        span.style.background = c.bg;
+        span.style.border = '1px solid ' + c.border;
+        span.style.color = c.text;
+        span.textContent = t;
+        box.appendChild(span);
+      });
+
+      // 光标
+      var cursor = document.createElement('span');
+      cursor.className = 'relay-cursor';
+      box.appendChild(cursor);
+
+      // 显示选项
+      renderRelayOptions();
+    }
+
+    function renderRelayOptions() {
+      var optionsEl = document.getElementById('relayOptions');
+      optionsEl.innerHTML = '';
+
+      // 根据最后内容查找下一步
+      var lastToken = relayTokens.length > 0 ? relayTokens[relayTokens.length - 1] : relayPrompt.slice(-2);
+      var fullKey = relayPrompt + relayTokens.join('');
+
+      // 找候选
+      var candidates;
+      if (relayTokens.length === 0) {
+        candidates = RELAY_DATA[relayPrompt] || [];
+      } else {
+        candidates = RELAY_NEXT[lastToken] || [];
+      }
+
+      if (!candidates.length) {
+        optionsEl.innerHTML = '<span style="font-size:13px;color:#94a3b8;">没有更多候选了，可以重置重来</span>';
+        return;
+      }
+
+      candidates.forEach(function(item) {
+        var btn = document.createElement('button');
+        btn.className = 'relay-option';
+        btn.innerHTML = item.token + '<span class="opt-prob">' + item.prob + '%</span>';
+        btn.addEventListener('click', function() {
+          relayTokens.push(item.token);
+          renderRelay();
+        });
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    // 自动接龙
+    var autoTimer = null;
+    document.getElementById('relayAutoBtn').addEventListener('click', function() {
+      if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+        this.textContent = '自动接龙';
+        return;
+      }
+      this.textContent = '暂停';
+      autoTimer = setInterval(function() {
+        var lastToken = relayTokens.length > 0 ? relayTokens[relayTokens.length - 1] : relayPrompt.slice(-2);
+        var candidates;
+        if (relayTokens.length === 0) {
+          candidates = RELAY_DATA[relayPrompt] || [];
+        } else {
+          candidates = RELAY_NEXT[lastToken] || [];
+        }
+
+        if (!candidates.length) {
+          clearInterval(autoTimer);
+          autoTimer = null;
+          document.getElementById('relayAutoBtn').textContent = '自动接龙';
+          return;
+        }
+
+        // 按概率选（简单实现：选概率最大的）
+        var best = candidates[0];
+        relayTokens.push(best.token);
+        renderRelay();
+      }, 800);
+    });
+
+    document.getElementById('relayResetBtn').addEventListener('click', function() {
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; document.getElementById('relayAutoBtn').textContent = '自动接龙'; }
+      relayTokens = [];
+      renderRelay();
+    });
+
+    document.querySelectorAll('.relay-prompt-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; document.getElementById('relayAutoBtn').textContent = '自动接龙'; }
+        relayPrompt = btn.dataset.prompt;
+        relayTokens = [];
+        document.getElementById('relayPrompt').textContent = relayPrompt;
+        renderRelay();
+      });
+    });
+
+    // ============================================================
+    // 步骤切换
+    // ============================================================
+    document.querySelectorAll('.step-dot').forEach(function(dot) {
+      dot.addEventListener('click', function() {
+        var step = dot.dataset.step;
+        document.querySelectorAll('.step-dot').forEach(function(d) { d.classList.remove('active'); });
+        dot.classList.add('active');
+        document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+        document.getElementById('step' + step).classList.add('active');
+      });
+    });
+
+    // 初始化
+    renderStep1();
+    renderStep2('今天天气真');
+    renderRelay();
+  })();
+  </script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

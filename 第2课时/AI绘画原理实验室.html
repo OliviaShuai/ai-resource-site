@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 绘画原理实验室 · 从噪声中去噪 | AI遇见APEC 第2课时</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --main:#DB2777;--main2:#A855F7;--accent:#F59E0B;
+    --soft:#FDF2F8;--ink:#1F2937;--muted:#6B7280;--line:#F3D6E7;
+    --bg:#150B1F;--ok:#22C55E;--ok-soft:#052E16;
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+    background:radial-gradient(1200px 600px at 70% -10%,#3B0764,#150B1F 60%);
+    color:#EDE9FE;min-height:100vh;line-height:1.8;padding-bottom:50px;
+  }
+  .hd{padding:26px 20px 20px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,rgba(219,39,119,.28),rgba(168,85,247,.22));border-bottom:1px solid rgba(255,255,255,.1)}
+  .hd-in{max-width:1000px;margin:0 auto}
+  .hd .tag{font-size:12.5px;letter-spacing:2px;color:#F9A8D4}
+  .hd h1{font-size:25px;margin:6px 0;color:#fff}
+  .hd p{font-size:13.5px;color:#DDD6FE;max-width:760px}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 16px}
+  .card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.12);
+    border-radius:16px;padding:18px 20px;margin-bottom:16px;backdrop-filter:blur(6px)}
+  .card h2{font-size:16.5px;color:#fff;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .card h2 .n{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--main),var(--main2));
+    color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .card .sub{font-size:13px;color:#C4B5FD;margin-bottom:14px}
+  .levels{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .lv{border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#DDD6FE;
+    border-radius:11px;padding:8px 16px;font-size:13.5px;cursor:pointer;transition:.2s;font-family:inherit}
+  .lv:hover{border-color:#F9A8D4;color:#fff}
+  .lv.on{background:linear-gradient(135deg,var(--main),var(--main2));border-color:transparent;color:#fff;font-weight:700}
+  .stage{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start}
+  .canvas-box{position:relative;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.18);
+    box-shadow:0 16px 40px rgba(0,0,0,.45);line-height:0}
+  canvas{display:block;cursor:crosshair;touch-action:none}
+  .panel{min-width:0}
+  .meter{background:rgba(0,0,0,.35);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,.1)}
+  .meter .row{display:flex;justify-content:space-between;font-size:13px;color:#C4B5FD;margin-bottom:6px}
+  .bar{height:12px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,#22C55E,#A3E635);transition:width .2s}
+  .stepinfo{margin-top:12px;font-size:14px;color:#F9A8D4;font-weight:700}
+  .hintbox{margin-top:12px;font-size:13px;color:#C4B5FD;background:rgba(168,85,247,.1);
+    border-left:3px solid var(--main2);border-radius:8px;padding:10px 12px}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .btn{border:none;border-radius:11px;padding:10px 18px;font-size:13.5px;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:.18s}
+  .btn.auto{background:linear-gradient(135deg,var(--main),var(--main2));color:#fff}
+  .btn.auto:hover{filter:brightness(1.1)}
+  .btn.ghost{background:rgba(255,255,255,.1);color:#EDE9FE;border:1px solid rgba(255,255,255,.2)}
+  .btn.ghost:hover{background:rgba(255,255,255,.18)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .reveal{display:none;margin-top:14px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4);
+    border-radius:12px;padding:12px 14px;font-size:13.5px;color:#BBF7D0}
+  .reveal.show{display:block}
+  /* 详细度对比 */
+  .pcompare{display:grid;gap:11px}
+  .prow{border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:12px 14px;background:rgba(0,0,0,.2)}
+  .prow h4{font-size:14px;color:#fff;margin-bottom:4px}
+  .prow .p{font-size:13.5px;color:#C4B5FD;margin-bottom:8px}
+  .freedom{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#9CA3AF}
+  .fbar{flex:1;height:9px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}
+  .fbar i{display:block;height:100%;border-radius:999px}
+  /* Prompt 拼装 */
+  .builder{display:grid;gap:10px}
+  .brow{display:grid;grid-template-columns:88px 1fr;gap:10px;align-items:center}
+  .brow label{font-size:13px;color:#F9A8D4;font-weight:700}
+  select,input[type=text]{width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.18);
+    color:#fff;border-radius:10px;padding:8px 11px;font-size:13.5px;font-family:inherit;outline:none}
+  select:focus,input:focus{border-color:var(--main)}
+  .out{margin-top:14px;background:#0B0713;border:1px solid rgba(255,255,255,.16);border-radius:12px;
+    padding:14px;font-size:14px;color:#E9D5FF;line-height:1.9;min-height:70px;word-break:break-word}
+  .foot{text-align:center;font-size:12.5px;color:#8B7BA8;margin-top:22px;line-height:1.9}
+  .foot a{color:#F9A8D4}
+  @media(max-width:860px){
+    .stage{grid-template-columns:1fr}
+    .canvas-box{margin:0 auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="hd"><div class="hd-in">
+  <div class="tag">AI遇见APEC · 第2课时 · 配套学习资源</div>
+  <h1>🧪 AI 绘画原理实验室</h1>
+  <p>AI 画图不是从网上“搜”图，而是从一屏噪声开始，一步一步把图像“擦”出来。
+     在这里，你可以亲手扮演一次 AI：先手动去噪，再看 AI 自动去噪的全过程，
+     最后亲手拼一条属于自己的海报 Prompt。</p>
+</div></header>
+
+<div class="wrap">
+
+  <!-- 1 去噪实验室 -->
+  <div class="card">
+    <h2><span class="n">1</span>去噪实验室：把图像“擦”出来</h2>
+    <div class="sub">按住鼠标（或手指）在画面上涂抹，把噪声擦掉，看看底下藏着什么。三个关卡的噪声越来越多。</div>
+    <div class="levels">
+      <button class="lv on" data-lv="0">第 1 关 · 轻度噪声</button>
+      <button class="lv" data-lv="1">第 2 关 · 中度噪声</button>
+      <button class="lv" data-lv="2">第 3 关 · 重度噪声</button>
+    </div>
+    <div class="stage">
+      <div class="canvas-box">
+        <canvas id="target" width="480" height="360" style="position:absolute;visibility:hidden"></canvas>
+        <canvas id="noise" width="480" height="360"></canvas>
+      </div>
+      <div class="panel">
+        <div class="meter">
+          <div class="row"><span>去噪进度</span><span id="pct">0%</span></div>
+          <div class="bar"><i id="pbar"></i></div>
+          <div class="stepinfo" id="stepinfo">开始涂抹，看看第 1 块清晰的地方在哪里</div>
+        </div>
+        <div class="btns">
+          <button class="btn auto" id="btnAuto">🤖 让 AI 自动去噪</button>
+          <button class="btn ghost" id="btnReset">↺ 重置噪声</button>
+        </div>
+        <div class="hintbox">
+          <b>边玩边想：</b>擦到一半时，你能看出画的是什么吗？
+          AI 也是这样——它<b>不是一次擦干净</b>，而是分很多步，每一步只去掉一点噪声，
+          越到后面图像越清晰。
+        </div>
+        <div class="reveal" id="reveal"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 文字导航 -->
+  <div class="card">
+    <h2><span class="n">2</span>文字导航：Prompt 越详细，AI 越听话</h2>
+    <div class="sub">同一团噪声，可以“走”向无数种画面。你的文字就是告诉 AI 往哪走的导航信号。</div>
+    <div class="pcompare">
+      <div class="prow">
+        <h4>Prompt A · 极简</h4>
+        <div class="p">“一只猫”</div>
+        <div class="freedom"><span>AI 自由发挥空间</span><span class="fbar"><i style="width:92%;background:#F87171"></i></span><span>很大</span></div>
+      </div>
+      <div class="prow">
+        <h4>Prompt B · 具体</h4>
+        <div class="p">“一只橘色的胖猫蜷缩在灰色布艺沙发上睡觉”</div>
+        <div class="freedom"><span>AI 自由发挥空间</span><span class="fbar"><i style="width:48%;background:#FBBF24"></i></span><span>中等</span></div>
+      </div>
+      <div class="prow">
+        <h4>Prompt C · 详细</h4>
+        <div class="p">“一只橘色的胖猫蜷缩在灰色布艺沙发上睡觉，午后阳光透过白色纱窗，暖色调，写实风格”</div>
+        <div class="freedom"><span>AI 自由发挥空间</span><span class="fbar"><i style="width:16%;background:#4ADE80"></i></span><span>很小</span></div>
+      </div>
+    </div>
+    <div class="hintbox" style="margin-top:14px">
+      <b>结论：</b>说得越具体，AI 自由发挥的空间越小，结果就越接近你想要的画面。
+      但反过来——<b>如果你描述错了，它也会忠实地照做</b>。
+      另外，同一句 Prompt 每次生成的结果都不一样，是因为每次的<b>随机起点（噪声）不同</b>。
+    </div>
+  </div>
+
+  <!-- 3 Prompt 拼装器 -->
+  <div class="card">
+    <h2><span class="n">3</span>海报 Prompt 拼装器：五要素拼出你的指令</h2>
+    <div class="sub">选择主体、风格、构图、色彩和细节，下面会自动拼成一条完整 Prompt，复制后就能去 AI 绘图工具里用。</div>
+    <div class="builder">
+      <div class="brow"><label>主体</label>
+        <input type="text" id="f1" value="APEC logo, Shenzhen city skyline, Pacific Ocean waves, 21 stars"></div>
+      <div class="brow"><label>风格</label>
+        <select id="f2">
+          <option value="flat design style, modern, professional">扁平化设计（现代、专业）</option>
+          <option value="futuristic tech style, glowing lines">科技感（发光线条）</option>
+          <option value="cyberpunk neon style">赛博朋克（霓虹夜色）</option>
+          <option value="traditional Chinese ink wash painting style">水墨风（东方雅致）</option>
+          <option value="minimalist style, clean background">极简风（干净留白）</option>
+          <option value="hand-drawn illustration style">手绘插画风</option>
+        </select></div>
+      <div class="brow"><label>构图</label>
+        <select id="f3">
+          <option value="poster layout, centered composition, skyline silhouette at the bottom">海报竖版 · 居中构图 · 底部城市剪影</option>
+          <option value="golden ratio composition, balanced layout">黄金分割 · 均衡布局</option>
+          <option value="symmetrical composition, strong central axis">对称构图 · 强中轴</option>
+          <option value="low angle view, looking up at the skyline">仰视视角 · 仰望天际线</option>
+          <option value="top view, bird's eye perspective">俯视视角 · 鸟瞰</option>
+        </select></div>
+      <div class="brow"><label>色彩</label>
+        <select id="f4">
+          <option value="blue and gold color scheme">蓝金配色（APEC 主色）</option>
+          <option value="deep blue and cyan gradient">深蓝到青色的渐变</option>
+          <option value="warm sunset orange and teal">暖夕阳橙 + 青绿</option>
+          <option value="red and gold festive palette">红金喜庆配色</option>
+        </select></div>
+      <div class="brow"><label>细节</label>
+        <input type="text" id="f5" value="high quality, clean, no text, no watermark"></div>
+    </div>
+    <div class="out" id="out"></div>
+    <div class="btns">
+      <button class="btn auto" id="btnCopy">📋 复制这条 Prompt</button>
+      <button class="btn ghost" id="btnRandom">🎲 随机换一组</button>
+    </div>
+    <div class="hintbox" style="margin-top:14px">
+      <b>五要素口诀：</b>主体画什么，风格怎么画，构图怎么排，色彩用什么，细节加什么。
+    </div>
+  </div>
+
+  <div class="foot">
+    AI遇见APEC · 六课时单元 · 第2课时《AI 绘画：APEC 主题海报设计》配套资源<br>
+    本页面完全离线运行 · <a href="%E7%AC%AC2%E8%AF%BE%E6%97%B6_%E7%BD%91%E9%A1%B5%E6%95%99%E6%9D%90_AI%E7%BB%98%E7%94%BB%E4%B8%8EAPEC%E6%B5%B7%E6%8A%A5.html">返回本课网页教材</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var T = document.getElementById('target');
+  var N = document.getElementById('noise');
+  var tc = T.getContext('2d');
+  var nc = N.getContext('2d');
+  var W = T.width, H = T.height;
+  var LEVELS = [0.50, 0.70, 0.88];
+  var lv = 0, running = false;
+  var names = ['苹果', '猫', 'APEC 徽标风车'];
+
+  /* ---------- 用 canvas 画出三张“隐藏图像” ---------- */
+  function drawTarget(idx){
+    tc.clearRect(0,0,W,H);
+    var g = tc.createLinearGradient(0,0,W,H);
+    g.addColorStop(0,'#FDF2F8'); g.addColorStop(1,'#EDE9FE');
+    tc.fillStyle = g; tc.fillRect(0,0,W,H);
+    tc.save();
+    tc.translate(W/2, H/2);
+
+    if(idx === 0){                       // 苹果
+      tc.fillStyle = '#E11D48';
+      tc.beginPath(); tc.ellipse(-8, 22, 118, 108, 0, 0, Math.PI*2); tc.fill();
+      tc.fillStyle = '#BE123C';
+      tc.beginPath(); tc.ellipse(52, 34, 52, 62, 0.4, 0, Math.PI*2); tc.fill();
+      tc.fillStyle = '#713F12';
+      tc.fillRect(-9, -110, 18, 52);
+      tc.fillStyle = '#16A34A';
+      tc.beginPath(); tc.ellipse(60, -92, 62, 30, -0.5, 0, Math.PI*2); tc.fill();
+      tc.fillStyle = 'rgba(255,255,255,.5)';
+      tc.beginPath(); tc.ellipse(-52, -18, 30, 20, -0.6, 0, Math.PI*2); tc.fill();
+    }
+    else if(idx === 1){                  // 猫
+      tc.fillStyle = '#F97316';
+      tc.beginPath(); tc.moveTo(-118,-58); tc.lineTo(-62,-132); tc.lineTo(-24,-72); tc.closePath(); tc.fill();
+      tc.beginPath(); tc.moveTo(118,-58); tc.lineTo(62,-132); tc.lineTo(24,-72); tc.closePath(); tc.fill();
+      tc.beginPath(); tc.ellipse(0, 16, 124, 112, 0, 0, Math.PI*2); tc.fill();
+      tc.fillStyle = '#FFF7ED';
+      tc.beginPath(); tc.ellipse(0, 62, 66, 48, 0, 0, Math.PI*2); tc.fill();
+      tc.fillStyle = '#1F2937';
+      tc.beginPath(); tc.ellipse(-46,-8,15,20,0,0,Math.PI*2); tc.fill();
+      tc.beginPath(); tc.ellipse(46,-8,15,20,0,0,Math.PI*2); tc.fill();
+      tc.fillStyle = '#FB7185';
+      tc.beginPath(); tc.moveTo(0,32); tc.lineTo(-16,18); tc.lineTo(16,18); tc.closePath(); tc.fill();
+      tc.strokeStyle = '#1F2937'; tc.lineWidth = 3;
+      [[-60,44],[-72,62],[-60,80],[60,44],[72,62],[60,80]].forEach(function(p,i){
+        tc.beginPath(); tc.moveTo(0,52);
+        tc.lineTo(p[0]*(i<3?1:-1), p[1]); tc.stroke();
+      });
+    }
+    else{                                // APEC 风格风车
+      var colors = ['#0284C7','#0EA5E9','#38BDF8','#7DD3FC'];
+      var r0 = 46, r1 = 138;
+      for(var i=0;i<4;i++){
+        var a0 = -Math.PI/2 + i*Math.PI/2;
+        tc.fillStyle = colors[i];
+        tc.beginPath();
+        tc.moveTo(0,0);
+        tc.lineTo(r0*Math.cos(a0), r0*Math.sin(a0));
+        tc.lineTo(r1*Math.cos(a0+0.62), r1*Math.sin(a0+0.62));
+        tc.lineTo(r1*Math.cos(a0+1.35), r1*Math.sin(a0+1.35));
+        tc.closePath(); tc.fill();
+      }
+      tc.fillStyle = '#EAB308';
+      tc.beginPath(); tc.arc(0,0,34,0,Math.PI*2); tc.fill();
+      tc.fillStyle = '#fff';
+      tc.beginPath(); tc.arc(0,0,17,0,Math.PI*2); tc.fill();
+    }
+    tc.restore();
+  }
+
+  /* ---------- 生成噪声层 ---------- */
+  function buildNoise(density){
+    var img = nc.createImageData(W,H);
+    var d = img.data;
+    for(var i=0;i<d.length;i+=4){
+      var v = Math.random()*255;
+      d[i] = d[i+1] = d[i+2] = v;
+      d[i+3] = Math.random() < density ? 255 : 0;
+    }
+    nc.globalCompositeOperation = 'source-over';
+    nc.clearRect(0,0,W,H);
+    nc.putImageData(img,0,0);
+    progress(true);
+  }
+
+  /* ---------- 进度计算 ---------- */
+  function progress(silent){
+    var d = nc.getImageData(0,0,W,H).data;
+    var total = 0, clear = 0;
+    for(var i=3;i<d.length;i+=4*40){
+      total++; if(d[i] < 40) clear++;
+    }
+    var p = Math.round(clear/total*100);
+    document.getElementById('pct').textContent = p + '%';
+    document.getElementById('pbar').style.width = p + '%';
+    if(!silent) setStep(p);
+    if(p >= 97 && lv >= 0){
+      var r = document.getElementById('reveal');
+      r.classList.add('show');
+      r.innerHTML = '🎉 图像完全清晰了！这一关藏着的是一张 <b>' + names[lv] + '</b>。' +
+        '注意：真实 AI 用的是几十步甚至上百步的细粒度去噪，而且每一步都由文字 Prompt 引导方向。';
+    }
+    return p;
+  }
+
+  function setStep(p){
+    var el = document.getElementById('stepinfo');
+    if(p < 15) el.textContent = '第 1 步：到处都是噪声，还看不出什么';
+    else if(p < 35) el.textContent = '第 ' + Math.ceil(p/10) + ' 步：开始出现模糊的轮廓了';
+    else if(p < 60) el.textContent = '第 ' + Math.ceil(p/10) + ' 步：大致能看出是什么了';
+    else if(p < 85) el.textContent = '第 ' + Math.ceil(p/10) + ' 步：细节越来越清楚';
+    else el.textContent = '最后几步：图像基本完全还原';
+  }
+
+  /* ---------- 手动涂抹 ---------- */
+  var drawing = false;
+  function erase(x, y, r){
+    nc.globalCompositeOperation = 'destination-out';
+    var g = nc.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0,'rgba(0,0,0,1)');
+    g.addColorStop(0.6,'rgba(0,0,0,1)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    nc.fillStyle = g;
+    nc.beginPath(); nc.arc(x, y, r, 0, Math.PI*2); nc.fill();
+    nc.globalCompositeOperation = 'source-over';
+  }
+  function pos(e){
+    var b = N.getBoundingClientRect();
+    var sx = W / b.width, sy = H / b.height;
+    var p = e.touches ? e.touches[0] : e;
+    return { x:(p.clientX - b.left)*sx, y:(p.clientY - b.top)*sy };
+  }
+  var last = null;
+  function down(e){ if(running) return; drawing = true; last = pos(e); erase(last.x,last.y,34); progress(); e.preventDefault(); }
+  function move(e){
+    if(!drawing || running) return;
+    var p = pos(e);
+    if(last){
+      var dist = Math.hypot(p.x-last.x, p.y-last.y), steps = Math.max(1, Math.ceil(dist/18));
+      for(var i=1;i<=steps;i++) erase(last.x+(p.x-last.x)*i/steps, last.y+(p.y-last.y)*i/steps, 34);
+    }
+    last = p; progress(); e.preventDefault();
+  }
+  function up(){ if(drawing){ drawing = false; last = null; progress(false); } }
+  N.addEventListener('mousedown', down); N.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', up);
+  N.addEventListener('touchstart', down, {passive:false});
+  N.addEventListener('touchmove', move, {passive:false});
+  N.addEventListener('touchend', up);
+
+  /* ---------- AI 自动去噪 ---------- */
+  function autoDenoise(){
+    if(running) return;
+    running = true;
+    document.getElementById('btnAuto').disabled = true;
+    var steps = 24, i = 0;
+    var timer = setInterval(function(){
+      i++;
+      var t = i/steps;
+      // 前中期：随机多边形区域逐步“猜对”；后期：整体扫除
+      var n = Math.round(6 + t*26);
+      for(var k=0;k<n;k++){
+        var x = Math.random()*W, y = Math.random()*H;
+        erase(x, y, 26 + Math.random()*46 * (0.4 + t));
+      }
+      if(t > 0.55){
+        for(var k2=0;k2<40;k2++){
+          erase(Math.random()*W, Math.random()*H, 20 + Math.random()*60);
+        }
+      }
+      var p = progress();
+      if(i >= steps || p >= 99){
+        clearInterval(timer);
+        nc.globalCompositeOperation = 'destination-out';
+        nc.fillRect(0,0,W,H);
+        nc.globalCompositeOperation = 'source-over';
+        progress(false);
+        running = false;
+        document.getElementById('btnAuto').disabled = false;
+      }
+    }, 90);
+  }
+
+  /* ---------- 关卡切换 ---------- */
+  document.querySelectorAll('.lv').forEach(function(b){
+    b.addEventListener('click', function(){
+      if(running) return;
+      document.querySelectorAll('.lv').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      lv = parseInt(b.getAttribute('data-lv'), 10);
+      document.getElementById('reveal').classList.remove('show');
+      drawTarget(lv);
+      buildNoise(LEVELS[lv]);
+    });
+  });
+  document.getElementById('btnReset').addEventListener('click', function(){
+    if(running) return;
+    document.getElementById('reveal').classList.remove('show');
+    buildNoise(LEVELS[lv]);
+  });
+  document.getElementById('btnAuto').addEventListener('click', autoDenoise);
+
+  /* ---------- Prompt 拼装器 ---------- */
+  var FIELDS = ['f1','f2','f3','f4','f5'];
+  function buildPrompt(){
+    var v = FIELDS.map(function(id){ return document.getElementById(id).value.trim(); })
+                  .filter(function(x){ return x; });
+    var text = v.join(', ');
+    document.getElementById('out').textContent = text;
+    return text;
+  }
+  FIELDS.forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener('input', buildPrompt);
+    el.addEventListener('change', buildPrompt);
+  });
+  document.getElementById('btnRandom').addEventListener('click', function(){
+    ['f2','f3','f4'].forEach(function(id){
+      var s = document.getElementById(id);
+      s.selectedIndex = Math.floor(Math.random()*s.options.length);
+    });
+    buildPrompt();
+  });
+  document.getElementById('btnCopy').addEventListener('click', function(){
+    var t = buildPrompt(), b = this, old = b.textContent;
+    var done = function(){ b.textContent = '✅ 已复制，去 AI 绘图工具里粘贴吧'; setTimeout(function(){ b.textContent = old; }, 1800); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done, function(){ fallback(t, done); });
+    } else fallback(t, done);
+  });
+  function fallback(t, cb){
+    var ta = document.createElement('textarea');
+    ta.value = t; ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); cb(); }catch(e){ alert('请手动复制：\n'+t); }
+    document.body.removeChild(ta);
+  }
+
+  drawTarget(0); buildNoise(LEVELS[0]); buildPrompt();
+})();
+</script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

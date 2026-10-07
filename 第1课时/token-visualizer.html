@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token 分词器可视化</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f0f4ff;
+      color: #1e293b;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 24px; }
+    header h1 {
+      font-size: 24px;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header p { color: #64748b; font-size: 14px; margin-top: 4px; }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(99,102,241,0.08);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      border: 1.5px solid rgba(99,102,241,0.15);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      line-height: 1.6;
+    }
+    textarea:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+    .examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .examples button {
+      padding: 5px 12px;
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 16px;
+      background: #fff;
+      color: #64748b;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .examples button:hover { border-color: #6366f1; color: #6366f1; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tab {
+      flex: 1;
+      padding: 10px 8px;
+      border: 1.5px solid rgba(99,102,241,0.15);
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fff;
+    }
+    .tab .name { font-size: 13px; font-weight: 600; }
+    .tab .desc { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .tab:hover { border-color: #6366f1; }
+    .tab.active {
+      border-color: #6366f1;
+      background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(236,72,153,0.05));
+    }
+    .tab.active .name { color: #6366f1; }
+
+    .token-box {
+      min-height: 60px;
+      padding: 16px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid rgba(99,102,241,0.1);
+      line-height: 2.4;
+      font-size: 15px;
+      word-break: break-all;
+    }
+    .token-box.empty { display: flex; align-items: center; justify-content: center; color: #94a3b8; }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      margin: 1px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: transform 0.15s;
+    }
+    .pill:hover { transform: translateY(-1px); }
+
+    .stats { display: flex; gap: 12px; }
+    .stat {
+      flex: 1;
+      text-align: center;
+      padding: 14px 8px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid rgba(99,102,241,0.08);
+    }
+    .stat .num {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat .label { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+    .tips {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.7;
+      background: rgba(99,102,241,0.05);
+      border-left: 3px solid #6366f1;
+      padding: 12px 16px;
+      border-radius: 8px;
+    }
+    .tips strong { color: #1e293b; }
+
+    .section-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+
+    @media (max-width: 600px) {
+      .stats { flex-direction: column; }
+      .tab .desc { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div style="background:#FFF7ED;border-bottom:1px solid #FDE68A;color:#92400E;font-size:13px;padding:9px 14px;text-align:center;line-height:1.7">
+  ⚠️ 本页是旧版。建议使用升级版：
+  <a href="Token%E5%88%86%E8%AF%8D%E5%99%A8%E4%BD%93%E9%AA%8C%E5%99%A8.html" style="color:#4F46E5;font-weight:700;text-decoration:none">
+    打开「Token 分词器体验器」→</a>
+  （同时显示字符级 / 词级 / 子词级三种切法，还能做中英文 Token 对比实验）
+</div>
+  <div class="container">
+    <header>
+      <h1>Token 分词器可视化</h1>
+      <p>输入文本，看看不同模型是怎么切分 Token 的</p>
+    </header>
+
+    <!-- 输入 -->
+    <div class="card">
+      <textarea id="input" placeholder="输入文本...">Hello 你好，世界！</textarea>
+      <div class="examples">
+        <button data-text="Hello 你好，世界！">中英混合</button>
+        <button data-text="The quick brown fox jumps.">英文句子</button>
+        <button data-text="人工智能是计算机科学的分支。">中文句子</button>
+        <button data-text="I love 苹果 and bananas 123">混合内容</button>
+      </div>
+    </div>
+
+    <!-- 模型选择 -->
+    <div class="card">
+      <div class="section-title">选择分词模型</div>
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-model="char">
+          <div class="name">字符级</div>
+          <div class="desc">每个字一个Token</div>
+        </div>
+        <div class="tab" data-model="word">
+          <div class="name">词级</div>
+          <div class="desc">按词切分</div>
+        </div>
+        <div class="tab" data-model="bpe">
+          <div class="name">BPE子词</div>
+          <div class="desc">GPT用的方式</div>
+        </div>
+      </div>
+      <div class="token-box" id="output"></div>
+    </div>
+
+    <!-- 统计 -->
+    <div class="card">
+      <div class="stats">
+        <div class="stat">
+          <div class="num" id="tokenCount">0</div>
+          <div class="label">Token 数量</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="charCount">0</div>
+          <div class="label">字符数量</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 小贴士 -->
+    <div class="card">
+      <div class="tips" id="tips">
+        <strong>字符级分词</strong>：把文本中每个字符（含空格、标点）都当作一个 Token。最简单直观，适合入门理解。
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // BPE 合并规则（简化版）
+    var MERGES = [
+      ['t','h'],['e','r'],['o','n'],['i','n'],['a','n'],['e','n'],['r','e'],
+      ['o','r'],['a','t'],['e','d'],['n','d'],['n','g'],['a','l'],['a','r'],
+      ['s','t'],['e','s'],['i','s'],['i','t'],['l','e'],['s','e'],['v','e'],
+      ['m','e'],['c','h'],['w','h'],['t','i'],['h','e'],['w','e'],['e','l'],
+      ['d','e'],['o','f'],['t','o'],['i','o'],['n','t'],['f','r'],['o','m'],
+      ['o','t'],['w','i'],['a','s'],['a','m'],['u','t'],['a','k'],['l','i'],
+      ['b','e'],['o','w'],['a','y'],['o','o'],['i','e'],['e','e'],['e','a'],
+      ['a','i'],['h','i'],['o','p'],['th','e'],['i','ng'],['a','nd'],['h','er'],
+      ['v','er'],['o','ut'],['wh','at'],['wh','en'],['th','is'],['th','at'],
+      ['wi','th'],['f','or'],['n','ot'],['io','n'],['t','io'],['e','nt'],
+      ['e','st'],['a','ti'],['s','he'],['y','ou'],['th','ey'],['e','re'],
+      ['w','as'],['h','av'],['h','ave'],['a','re'],['o','ur'],['o','ne'],
+      ['th','ere'],['wh','ich'],['ot','her'],['fr','om'],['w','ere'],
+      ['th','ink'],['b','een'],['h','ere'],['w','ould'],['c','ould'],
+      ['sh','ould'],['th','eir'],['th','ese'],['th','ose'],['a','bout'],
+      ['a','fter'],['b','etween'],
+    ];
+
+    var TIPS = {
+      char: '<strong>字符级分词</strong>：把文本中每个字符（含空格、标点）都当作一个 Token。最简单直观，适合入门理解。',
+      word: '<strong>词级分词</strong>：英文按空格切分为词，中文用词典进行正向最大匹配（如"人工智能"识别为一个词）。类似人类阅读的自然方式。',
+      bpe: '<strong>BPE 子词分词</strong>：从字符开始，逐步合并高频字符对。GPT 等模型使用的方式，兼顾效率和覆盖面。',
+    };
+
+    // 中文常用词典（按词长从短到长排列不影响结果，正向最大匹配会自动处理）
+    var CN_DICT = [
+      '计算机科学','人工智能','大数据','互联网','云计算','机器学习','深度学习',
+      '自然语言处理','计算机视觉','信息科技','科学技术','数据处理',
+      '信息处理','智能机器','智能终端','搜索引擎','数据结构','程序设计',
+      '软件开发','编程语言','操作系统','数据库','网络协议','网络安全',
+      '虚拟现实','增强现实','区块链','物联网','5G通信','量子计算',
+      '机器人','自动化','数字化','智能化','信息化','现代化',
+      '人工智能技术','计算机程序','数据挖掘','文本分类','语音识别',
+      '图像识别','人脸识别','自动驾驶','智能制造','智慧城市',
+      '我们','你们','他们','它们','这是','那是','就是','不是','什么',
+      '为什么','怎么样','怎么办','因为','所以','但是','而且','然后',
+      '如果','虽然','尽管','不过','因此','另外','其实','当然',
+      '一个','一些','这种','那种','这里','那里','哪里','现在',
+      '时候','时间','地方','东西','事情','问题','方法','方式',
+      '世界','中国','学生','老师','学校','课堂','学习','理解',
+      '知道','认为','觉得','看到','听到','想到','做出','产生',
+      '了解','实质','反应','相似','分支','文本','语言','模型',
+      '分词','字符','字节','空格','标点','符号','数字','英文',
+      '中文','单词','句子','段落','文章','内容','输入','输出',
+      '处理','切分','合并','频率','词表','词组','子词','编码',
+      '解码','向量','参数','训练','预测','生成','识别','分类',
+      '你好','世界','你好世界','苹果','香蕉','狐狸','跳','快',
+      '懒','狗','猫','电脑','手机','键盘','屏幕','鼠标',
+      '函数','变量','循环','条件','数组','对象','方法','属性',
+      'Hello','World','Python','JavaScript','Java','HTML','CSS',
+      'function','console','log','var','let','const','return','if',
+      'else','for','while','class','import','export','true','false',
+      '计算机','网络','数据','信息','智能','科技','科学','技术',
+      '程序','软件','硬件','系统','算法','编码','分词器','语言',
+      '教学','演示','工具','可视化','效果','理解','划分','模型',
+      ' artificial','intelligence','token','tokenizer',
+    ];
+
+    // 构建 Set 加速查找
+    var DICT_SET = {};
+    var MAX_WORD_LEN = 1;
+    CN_DICT.forEach(function(w) {
+      DICT_SET[w] = true;
+      var len = Array.from(w).length;
+      if (len > MAX_WORD_LEN) MAX_WORD_LEN = len;
+    });
+
+    // 正向最大匹配中文分词
+    function segmentCN(chars) {
+      var result = [];
+      var i = 0;
+      while (i < chars.length) {
+        var matched = false;
+        // 从最长到最短尝试匹配
+        for (var len = Math.min(MAX_WORD_LEN, chars.length - i); len > 1; len--) {
+          var word = chars.slice(i, i + len).join('');
+          if (DICT_SET[word]) {
+            result.push(word);
+            i += len;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          result.push(chars[i]);
+          i++;
+        }
+      }
+      return result;
+    }
+
+    // 分词器
+    function tokChar(text) { return Array.from(text); }
+
+    function tokWord(text) {
+      var r = /(\s+)|([\u4e00-\u9fff]+)|([a-zA-Z]+)|([0-9]+)|([^\s\w\u4e00-\u9fff]+)/g;
+      var t = [], m;
+      while (m = r.exec(text)) {
+        if (m[1]) {
+          t.push(m[1]); // 空格
+        } else if (m[2]) {
+          // 中文段落：用词典分词
+          var cnChars = Array.from(m[2]);
+          var words = segmentCN(cnChars);
+          t = t.concat(words);
+        } else if (m[3]) {
+          t.push(m[3]); // 英文单词
+        } else if (m[4]) {
+          t.push(m[4]); // 数字
+        } else if (m[5]) {
+          // 标点符号：逐个处理
+          var punts = Array.from(m[5]);
+          t = t.concat(punts);
+        }
+      }
+      return t;
+    }
+
+    function tokBPE(text) {
+      var tokens = Array.from(text);
+      for (var i = 0; i < MERGES.length; i++) {
+        var L = MERGES[i][0], R = MERGES[i][1], M = L + R;
+        var next = [], j = 0, changed = false;
+        while (j < tokens.length) {
+          if (j < tokens.length - 1 && tokens[j] === L && tokens[j+1] === R) {
+            next.push(M); j += 2; changed = true;
+          } else { next.push(tokens[j]); j++; }
+        }
+        if (changed) tokens = next;
+      }
+      return tokens;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function isSpace(t) { return /^\s+$/.test(t); }
+
+    function render(tokens, box) {
+      box.innerHTML = '';
+      box.classList.remove('empty');
+      if (!tokens.length) {
+        box.classList.add('empty');
+        box.textContent = '请输入文本';
+        return;
+      }
+      tokens.forEach(function(t, i) {
+        var hue = (i * 47) % 360;
+        var pill = document.createElement('span');
+        pill.className = 'pill';
+        pill.style.background = 'hsl(' + hue + ',70%,90%)';
+        pill.style.border = '1px solid hsl(' + hue + ',50%,65%)';
+        pill.style.color = 'hsl(' + hue + ',45%,30%)';
+        pill.textContent = isSpace(t) ? '\u2423' : t;
+        pill.title = '#' + (i+1) + ': ' + (isSpace(t) ? '(空格)' : t);
+        box.appendChild(pill);
+      });
+    }
+
+    var model = 'char';
+    var input = document.getElementById('input');
+    var output = document.getElementById('output');
+
+    function update() {
+      var text = input.value;
+      var tokens;
+      switch (model) {
+        case 'char': tokens = tokChar(text); break;
+        case 'word': tokens = tokWord(text); break;
+        case 'bpe': tokens = tokBPE(text); break;
+      }
+      render(tokens, output);
+      document.getElementById('tokenCount').textContent = tokens.length;
+      document.getElementById('charCount').textContent = Array.from(text).length;
+      document.getElementById('tips').innerHTML = TIPS[model];
+    }
+
+    input.addEventListener('input', function() {
+      clearTimeout(input._t);
+      input._t = setTimeout(update, 150);
+    });
+
+    document.querySelectorAll('.tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        model = tab.dataset.model;
+        update();
+      });
+    });
+
+    document.querySelectorAll('.examples button').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        input.value = btn.dataset.text;
+        update();
+      });
+    });
+
+    update();
+  })();
+  </script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

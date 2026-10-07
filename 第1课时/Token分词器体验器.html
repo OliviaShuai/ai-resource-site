@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token 分词器体验器 · AI 是怎么“读”文字的 | AI遇见APEC 第1课时</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --main:#4F46E5;--main2:#7C3AED;--accent:#F59E0B;
+    --soft:#EEF0FF;--soft2:#F7F6FF;--ink:#1F2937;--muted:#6B7280;
+    --line:#E5E7EB;--ok:#15803D;--ok-soft:#ECFDF5;--warn:#B45309;--warn-soft:#FFFBEB;
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+    background:linear-gradient(180deg,#F6F7FB,#EEF0FA 60%,#F6F7FB);
+    color:var(--ink);line-height:1.8;min-height:100vh;padding-bottom:50px;
+  }
+  .hd{
+    background:linear-gradient(135deg,var(--main),var(--main2));color:#fff;
+    padding:26px 20px 22px;position:relative;overflow:hidden;
+  }
+  .hd::after{content:"";position:absolute;right:-70px;top:-70px;width:260px;height:260px;
+    border-radius:50%;background:rgba(255,255,255,.1)}
+  .hd-in{max-width:960px;margin:0 auto;position:relative;z-index:2}
+  .hd .tag{font-size:12.5px;letter-spacing:2px;opacity:.9}
+  .hd h1{font-size:25px;margin:6px 0 6px}
+  .hd p{font-size:13.5px;opacity:.92;max-width:720px}
+  .wrap{max-width:960px;margin:0 auto;padding:20px 16px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;
+    box-shadow:0 8px 24px rgba(17,24,39,.06);margin-bottom:16px}
+  .card h2{font-size:16.5px;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .card h2 .n{width:28px;height:28px;border-radius:9px;background:var(--soft);color:var(--main);
+    font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .card .sub{font-size:13px;color:var(--muted);margin-bottom:12px}
+  textarea{
+    width:100%;min-height:82px;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;
+    font-size:15px;font-family:inherit;line-height:1.7;resize:vertical;outline:none;color:var(--ink);
+  }
+  textarea:focus{border-color:var(--main);box-shadow:0 0 0 3px var(--soft)}
+  .examples{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .ex{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;
+    padding:5px 13px;font-size:12.5px;cursor:pointer;transition:.18s;font-family:inherit}
+  .ex:hover{border-color:var(--main);color:var(--main);background:var(--soft2)}
+  .modes{display:grid;gap:12px;margin-top:6px}
+  .mode{border:1px solid var(--line);border-radius:13px;padding:12px 14px;background:#fff}
+  .mode-h{display:flex;align-items:center;gap:9px;margin-bottom:8px;flex-wrap:wrap}
+  .mode-h b{font-size:14.5px}
+  .mode-h .badge{font-size:11.5px;background:var(--soft);color:var(--main);border-radius:999px;
+    padding:2px 10px;font-weight:700}
+  .mode-h .cnt{margin-left:auto;font-size:12.5px;color:var(--muted)}
+  .mode-h .cnt b{font-size:17px;color:var(--main);font-weight:800}
+  .toks{min-height:44px;padding:9px 10px;border-radius:10px;background:#FAFAFC;
+    border:1px dashed var(--line);line-height:2.5;word-break:break-word}
+  .pill{display:inline-block;padding:1px 8px;margin:2px 2px;border-radius:7px;font-size:14px;
+    font-weight:500;white-space:pre}
+  .mode-note{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px}
+  .stat{background:var(--soft2);border:1px solid var(--line);border-radius:12px;padding:11px 8px;text-align:center}
+  .stat .num{font-size:23px;font-weight:800;color:var(--main);line-height:1.25}
+  .stat .lab{font-size:12px;color:var(--muted)}
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .cmp .side{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+  .cmp .side h4{font-size:13.5px;margin-bottom:7px;color:var(--main)}
+  .cmp input{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:8px 11px;
+    font-size:14px;font-family:inherit;outline:none}
+  .cmp input:focus{border-color:var(--main)}
+  .cmp .res{margin-top:9px;font-size:13px;color:var(--muted)}
+  .cmp .res b{color:var(--main);font-size:17px;font-weight:800}
+  .verdict{margin-top:12px;background:var(--ok-soft);border:1px solid #A7F3D0;border-radius:12px;
+    padding:11px 14px;font-size:13.5px;color:#166534;display:none}
+  .verdict.show{display:block}
+  .tip{background:var(--warn-soft);border:1px solid #FDE68A;border-radius:12px;padding:12px 14px;
+    font-size:13.5px;color:#78350F;margin-top:12px}
+  .tip b{color:#92400E}
+  .tasks{counter-reset:t;display:grid;gap:9px}
+  .tasks li{list-style:none;counter-increment:t;position:relative;padding:10px 14px 10px 46px;
+    border:1px solid var(--line);border-radius:11px;font-size:14px;background:#fff}
+  .tasks li::before{content:counter(t);position:absolute;left:14px;top:10px;width:22px;height:22px;
+    border-radius:7px;background:var(--main);color:#fff;font-size:12px;font-weight:800;
+    display:flex;align-items:center;justify-content:center}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted);margin-top:10px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .foot{text-align:center;font-size:12.5px;color:var(--muted);margin-top:22px;line-height:1.9}
+  .foot a{color:var(--main)}
+  @media(max-width:720px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .cmp{grid-template-columns:1fr}
+    .hd h1{font-size:21px}
+  }
+</style>
+</head>
+<body>
+
+<header class="hd"><div class="hd-in">
+  <div class="tag">AI遇见APEC · 第1课时 · 配套学习资源</div>
+  <h1>🧩 Token 分词器体验器</h1>
+  <p>输入任意文字，看看它在 AI 眼里会被切成几块。左边输入、下面同时给出
+     <b>字符级 / 词级 / 子词级</b> 三种切法的结果与 Token 数量。</p>
+</div></header>
+
+<div class="wrap">
+
+  <!-- 1. 输入 -->
+  <div class="card">
+    <h2><span class="n">1</span>输入你想研究的文字</h2>
+    <div class="sub">中英文都可以，标点、空格、数字都会影响切分结果——这正是要观察的地方。</div>
+    <textarea id="input" placeholder="例如：人工智能很有趣">人工智能很有趣</textarea>
+    <div class="examples" id="examples"></div>
+    <div class="legend">
+      <span><i style="background:rgba(99,102,241,.25)"></i>每个色块 = 1 个 Token</span>
+      <span><i style="background:#D1D5DB"></i>␣ 表示空格（空格也会占 Token 哦）</span>
+    </div>
+  </div>
+
+  <!-- 2. 三种切法 -->
+  <div class="card">
+    <h2><span class="n">2</span>三种切法，同时对比</h2>
+    <div class="sub">真正的 AI（如 GPT 系列）使用的是第三种——子词级切分。</div>
+    <div class="modes" id="modes"></div>
+  </div>
+
+  <!-- 3. 数据统计 -->
+  <div class="card">
+    <h2><span class="n">3</span>数一数：一共切了几块？</h2>
+    <div class="sub">把数字记到你的学习任务单上，一会要用。</div>
+    <div class="stats">
+      <div class="stat"><div class="num" id="sChar">0</div><div class="lab">字符数（含空格标点）</div></div>
+      <div class="stat"><div class="num" id="sWord">0</div><div class="lab">词级 Token 数</div></div>
+      <div class="stat"><div class="num" id="sBpe">0</div><div class="lab">子词级 Token 数</div></div>
+      <div class="stat"><div class="num" id="sRatio">0</div><div class="lab">字符 ÷ 子词 Token</div></div>
+    </div>
+  </div>
+
+  <!-- 4. 中英文对比实验 -->
+  <div class="card">
+    <h2><span class="n">4</span>对比实验：同样的意思，谁更“费” Token？</h2>
+    <div class="sub">在左右两边分别输入表达同一个意思的中文和英文，看看 Token 数差多少。</div>
+    <div class="cmp">
+      <div class="side">
+        <h4>🇨🇳 中文</h4>
+        <input id="cn" value="你好世界">
+        <div class="res">子词级 Token 数：<b id="cnN">—</b></div>
+      </div>
+      <div class="side">
+        <h4>🇬🇧 英文</h4>
+        <input id="en" value="Hello World">
+        <div class="res">子词级 Token 数：<b id="enN">—</b></div>
+      </div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="tip">
+      <b>为什么中文常常更“费”Token？</b>
+      英文单词在词表里往往是完整的一整块，而一个汉字常常只占半个到一个 Token，
+      所以表达同样的意思，中文需要的 Token 数往往更多。这也意味着——
+      <b>同样长度的对话，中文可能更快用完 AI 的“字数额度”</b>。
+    </div>
+  </div>
+
+  <!-- 5. 探究任务 -->
+  <div class="card">
+    <h2><span class="n">5</span>探究任务（完成 4 个就算通关）</h2>
+    <div class="sub">每一项都请在任务单上写下你的发现，而不只是“试过了”。</div>
+    <ul class="tasks">
+      <li>输入 <b>Hello World</b>：子词级切成了几块？为什么被切在这个位置？</li>
+      <li>输入 <b>你好世界</b>：和英文比，谁的 Token 更多？多多少？</li>
+      <li>输入你的<b>中文名和拼音</b>：分别几个 Token？你发现了什么规律？</li>
+      <li>输入一句带标点的话（如“你好，APEC 2026！”）：标点和数字占 Token 吗？</li>
+    </ul>
+    <div class="tip">
+      <b>一句话小结：</b>AI 不是“读懂”了你的文字，而是把文字切成 Token、换成数字、再去做计算。
+      所以它是在“算”文字，而不是像我们一样“看”文字。
+    </div>
+  </div>
+
+  <div class="foot">
+    AI遇见APEC · 六课时单元 · 第1课时《认识AI：从 Token 到 Prompt》配套资源<br>
+    本页面完全离线运行，可自由复制给学生使用 · <a href="%E7%AC%AC1%E8%AF%BE%E6%97%B6_%E7%BD%91%E9%A1%B5%E6%95%99%E6%9D%90_%E4%BB%8EToken%E5%88%B0Prompt.html">返回本课网页教材</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- 常用词库（用于词典分词） ---------- */
+  var CN_DICT = ('人工智能 人工智能技术 计算机科学 计算机 大数据 互联网 云计算 机器学习 深度学习 '+
+    '自然语言处理 计算机视觉 信息科技 科学技术 数据处理 信息处理 智能机器 智能终端 搜索引擎 '+
+    '数据结构 程序设计 软件开发 编程语言 操作系统 数据库 网络协议 网络安全 虚拟现实 增强现实 '+
+    '区块链 物联网 量子计算 机器人 自动化 数字化 智能化 信息化 数据挖掘 文本分类 语音识别 '+
+    '图像识别 人脸识别 自动驾驶 智能制造 智慧城市 人工智能课程 大模型 生成式 提示词 '+
+    '我们 你们 他们 它们 这是 那是 就是 不是 什么 为什么 怎么样 怎么办 因为 所以 但是 而且 '+
+    '然后 如果 虽然 尽管 不过 因此 另外 其实 当然 一个 一些 这种 那种 这里 那里 哪里 '+
+    '现在 时候 时间 地方 东西 事情 问题 方法 方式 世界 中国 深圳 学生 老师 学校 课堂 '+
+    '学习 理解 知道 认为 觉得 看到 听到 想到 了解 文本 语言 模型 分词 字符 字节 空格 '+
+    '标点 符号 数字 英文 中文 单词 句子 段落 文章 内容 输入 输出 处理 切分 合并 频率 '+
+    '词表 词组 子词 编码 解码 向量 参数 训练 预测 生成 识别 分类 你好 世界 你好世界 '+
+    '苹果 香蕉 狐狸 狗 猫 电脑 手机 键盘 屏幕 鼠标 函数 变量 循环 条件 数组 对象 '+
+    '方法 属性 峰会 经济体 成员 合作 开放 创新 有趣 很 会 的 了 是 在 和 与 也 都 就 很').split(/\s+/);
+
+  /* ---------- 子词合并表（模拟 BPE 学到的常见合并） ---------- */
+  var MERGES = [
+    ['t','h'],['h','e'],['i','n'],['e','r'],['a','n'],['r','e'],['o','n'],['e','n'],
+    ['a','t'],['e','s'],['o','r'],['t','e'],['i','s'],['n','d'],['s','t'],['e','l'],
+    ['l','l'],['o','o'],['w','o'],['r','l'],['l','d'],['h','o'],['w','e'],['a','r'],
+    ['c','e'],['d','e'],['e','d'],['n','g'],['t','i'],['i','o'],['a','l'],['u','r'],
+    ['e','a'],['c','h'],['w','h'],['a','i'],['m','o'],['e','l'],['p','e'],['a','c'],
+    ['th','e'],['i','ng'],['a','nd'],['he','r'],['o','u'],['w','a'],['t','he'],['i','on'],
+    ['t','ion'],['a','tion'],['e','r'],['i','ng'],['o','f'],
+    ['人','工'],['人工','智能'],['智','能'],['你','好'],['你','好','世','界'],['世','界'],
+    ['有','趣'],['很','有'],['A','P'],['AP','EC'],['数','据'],['模','型'],['学','习'],
+    ['词','元'],['文','字'],['计','算'],['合','作'],['开','放'],['创','新'],['经','济']
+  ];
+
+  /* ---------- 分词实现 ---------- */
+  function chars(s){ return Array.from(s); }
+
+  function tokChar(s){ return chars(s); }
+
+  var DICT = {}; var MAXLEN = 1;
+  CN_DICT.forEach(function(w){
+    DICT[w] = true;
+    var n = chars(w).length;
+    if(n > MAXLEN) MAXLEN = n;
+  });
+  // 把合并表里的多字词也加入词典
+  MERGES.forEach(function(m){
+    var w = m.join('');
+    if(chars(w).length > 1 && !/^[a-zA-Z]+$/.test(w)) {
+      DICT[w] = true;
+      if(chars(w).length > MAXLEN) MAXLEN = chars(w).length;
+    }
+  });
+
+  function segCN(cs){
+    var out = [], i = 0;
+    while(i < cs.length){
+      var hit = false;
+      for(var L = Math.min(MAXLEN, cs.length - i); L > 1; L--){
+        var w = cs.slice(i, i + L).join('');
+        if(DICT[w]){ out.push(w); i += L; hit = true; break; }
+      }
+      if(!hit){ out.push(cs[i]); i++; }
+    }
+    return out;
+  }
+
+  function tokWord(s){
+    var r = /(\s+)|([\u4e00-\u9fff]+)|([A-Za-z]+)|([0-9]+)|([^\s\w\u4e00-\u9fff]+)/g;
+    var out = [], m;
+    while((m = r.exec(s))){
+      if(m[1]) out.push(m[1]);
+      else if(m[2]) out = out.concat(segCN(chars(m[2])));
+      else if(m[3]) out.push(m[3]);
+      else if(m[4]) out.push(m[4]);
+      else out = out.concat(chars(m[5]));
+    }
+    return out;
+  }
+
+  function tokBPE(s){
+    var t = chars(s);
+    for(var i = 0; i < MERGES.length; i++){
+      var L = MERGES[i][0], R = MERGES[i][1], M = L + R;
+      var next = [], j = 0;
+      while(j < t.length){
+        if(j < t.length - 1 && t[j] === L && t[j+1] === R){ next.push(M); j += 2; }
+        else { next.push(t[j]); j++; }
+      }
+      t = next;
+    }
+    return t.slice(0, 200);
+  }
+
+  /* ---------- 渲染 ---------- */
+  function hue(i){ return (i * 47) % 360; }
+
+  function pills(box, toks){
+    box.innerHTML = '';
+    if(!toks.length){ box.textContent = '请输入文字'; return; }
+    toks.forEach(function(t, i){
+      var sp = document.createElement('span');
+      sp.className = 'pill';
+      if(/^\s+$/.test(t)){
+        sp.style.background = '#E5E7EB';
+        sp.style.color = '#6B7280';
+        sp.textContent = t.replace(/ /g,'␣').replace(/\n/g,'⏎');
+      } else {
+        var h = hue(i);
+        sp.style.background = 'hsl(' + h + ',78%,90%)';
+        sp.style.color = 'hsl(' + h + ',55%,28%)';
+        sp.style.boxShadow = 'inset 0 0 0 1px hsl(' + h + ',55%,72%)';
+        sp.textContent = t;
+      }
+      sp.title = '第 ' + (i+1) + ' 个 Token：' + JSON.stringify(t);
+      box.appendChild(sp);
+    });
+  }
+
+  var MODES = [
+    {id:'char', name:'字符级切分', badge:'Char', note:'把每个字符都当成一个 Token，包括空格和标点。最简单，但词表会非常大。'},
+    {id:'word', name:'词级切分', badge:'Word', note:'英文按空格切，中文用词典切（如“人工智能”算一个词）。符合人的直觉，但遇到新词就没办法了。'},
+    {id:'bpe', name:'子词级切分', badge:'BPE · 真 AI 用这种', note:'从字符出发，把经常一起出现的组合逐步合并。既不会“词表爆炸”，又能处理没见过的新词——GPT 等模型用的就是它。'}
+  ];
+
+  var modesBox = document.getElementById('modes');
+  MODES.forEach(function(m){
+    var d = document.createElement('div');
+    d.className = 'mode';
+    d.innerHTML = '<div class="mode-h"><b>' + m.name + '</b><span class="badge">' + m.badge +
+      '</span><span class="cnt">Token 数：<b id="c-' + m.id + '">0</b></span></div>' +
+      '<div class="toks" id="t-' + m.id + '"></div><div class="mode-note">' + m.note + '</div>';
+    modesBox.appendChild(d);
+  });
+
+  var input = document.getElementById('input');
+
+  function update(){
+    var s = input.value;
+    var sets = { char: tokChar(s), word: tokWord(s), bpe: tokBPE(s) };
+    MODES.forEach(function(m){
+      pills(document.getElementById('t-' + m.id), sets[m.id]);
+      document.getElementById('c-' + m.id).textContent = sets[m.id].length;
+    });
+    document.getElementById('sChar').textContent = chars(s).length;
+    document.getElementById('sWord').textContent = sets.word.length;
+    document.getElementById('sBpe').textContent = sets.bpe.length;
+    var r = sets.bpe.length ? (chars(s).length / sets.bpe.length) : 0;
+    document.getElementById('sRatio').textContent = r ? r.toFixed(2) : '0';
+    updateCmp();
+  }
+
+  function updateCmp(){
+    var cn = document.getElementById('cn').value;
+    var en = document.getElementById('en').value;
+    var a = tokBPE(cn).length, b = tokBPE(en).length;
+    document.getElementById('cnN').textContent = a;
+    document.getElementById('enN').textContent = b;
+    var v = document.getElementById('verdict');
+    if(a && b){
+      v.classList.add('show');
+      if(a > b) v.innerHTML = '🔍 这次中文用了 <b>' + a + '</b> 个 Token，英文用了 <b>' + b +
+        '</b> 个——中文比英文多 <b>' + (a - b) + '</b> 个。';
+      else if(a < b) v.innerHTML = '🔍 这次英文反而更“费”：英文 <b>' + b + '</b> 个，中文 <b>' + a +
+        '</b> 个。换一组词再试试，看看是不是每次都这样。';
+      else v.innerHTML = '🔍 这次两者一样多（各 <b>' + a + '</b> 个）。换一组词再试试。';
+    } else { v.classList.remove('show'); }
+  }
+
+  var EX = [
+    '人工智能很有趣','你好世界','Hello World','APEC Summit 2026',
+    'I love APEC','你好，APEC 2026！','2026年深圳APEC峰会','生成式人工智能'
+  ];
+  var exBox = document.getElementById('examples');
+  EX.forEach(function(t){
+    var b = document.createElement('button');
+    b.className = 'ex'; b.textContent = t;
+    b.addEventListener('click', function(){ input.value = t; update(); });
+    exBox.appendChild(b);
+  });
+
+  var timer = null;
+  input.addEventListener('input', function(){
+    clearTimeout(timer); timer = setTimeout(update, 120);
+  });
+  document.getElementById('cn').addEventListener('input', updateCmp);
+  document.getElementById('en').addEventListener('input', updateCmp);
+
+  update();
+})();
+</script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 网页代码生成器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    background: linear-gradient(135deg, #f0f4ff 0%, #fdf0ff 100%);
+    color: #222; min-height: 100vh; padding: 20px;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 22px; }
+  header h1 { font-size: 26px; color: #4a3aff; }
+  header p { color: #666; margin-top: 6px; font-size: 14px; }
+
+  .card {
+    background: #fff; border-radius: 14px; padding: 18px;
+    box-shadow: 0 6px 24px rgba(80,60,200,.08); margin-bottom: 18px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+
+  .apikey-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .apikey-row .field { flex: 1; min-width: 240px; }
+
+  input[type=password], input[type=text], textarea, select {
+    width: 100%; padding: 10px 12px; border: 1px solid #d5d9e6;
+    border-radius: 9px; font-size: 14px; font-family: inherit; outline: none;
+    transition: border .2s;
+  }
+  input:focus, textarea:focus { border-color: #6c5cff; }
+  textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
+
+  .btn {
+    border: none; border-radius: 9px; padding: 11px 22px; font-size: 15px;
+    font-weight: 600; cursor: pointer; transition: transform .1s, opacity .2s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: #4a3aff; color: #fff; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ghost { background: #eef0fb; color: #4a3aff; }
+  .btn-green { background: #16a34a; color: #fff; }
+
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 860px){ .grid { grid-template-columns: 1fr; } }
+
+  .panel-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .panel-title h3 { font-size: 15px; }
+
+  #codeArea {
+    width: 100%; min-height: 380px; font-family: "Consolas", monospace;
+    font-size: 13px; background: #1e1e2e; color: #e0e0ff; border: none;
+    border-radius: 10px; padding: 14px; line-height: 1.5;
+  }
+  iframe {
+    width: 100%; min-height: 380px; border: 1px solid #e0e0e0;
+    border-radius: 10px; background: #fff;
+  }
+  .status { font-size: 13px; color: #666; margin-top: 8px; min-height: 18px; }
+  .status.err { color: #dc2626; }
+  .status.ok { color: #16a34a; }
+  .hint { font-size: 12px; color: #999; margin-top: 6px; }
+  .save-key { font-size: 12px; color: #666; display: flex; align-items: center; gap: 5px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎨 AI 网页代码生成器</h1>
+    <p>输入你的需求 → AI 生成 HTML 网页 → 在线预览效果 → 下载代码</p>
+  </header>
+
+  <!-- API 设置：密钥由老师在文件里预填，此卡片默认隐藏，学生看不到 -->
+  <div class="card" id="apiCard" style="display:none">
+    <div class="apikey-row">
+      <div class="field">
+        <label>DeepSeek API Key</label>
+        <input type="password" id="apiKey" placeholder="粘贴你的 sk-... 密钥">
+        <div class="save-key">
+          <input type="checkbox" id="saveKey" style="width:auto">
+          <label for="saveKey" style="margin:0;font-weight:400;">在本浏览器记住密钥（仅存本机）</label>
+        </div>
+      </div>
+      <div class="field" style="max-width:200px">
+        <label>模型</label>
+        <select id="model">
+          <option value="deepseek-chat">deepseek-chat（推荐）</option>
+          <option value="deepseek-reasoner">deepseek-reasoner</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 需求输入 -->
+  <div class="card">
+    <label>✍️ 描述你想要的网页</label>
+    <textarea id="prompt" placeholder="例如：做一个介绍我家乡的网页，有标题、三张风景介绍卡片、蓝色主题，底部有版权信息。"></textarea>
+    <div class="toolbar">
+      <button class="btn btn-primary" id="genBtn">🚀 生成网页</button>
+      <button class="btn btn-ghost" id="clearBtn">清空</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- 代码 + 预览 -->
+  <div class="grid">
+    <div class="card">
+      <div class="panel-title">
+        <h3>📝 生成的代码（可手动修改）</h3>
+        <button class="btn btn-green" id="downloadBtn">⬇ 下载 HTML</button>
+      </div>
+      <textarea id="codeArea" placeholder="生成的 HTML 代码会显示在这里……"></textarea>
+    </div>
+    <div class="card">
+      <div class="panel-title">
+        <h3>👀 在线预览</h3>
+        <button class="btn btn-ghost" id="runBtn">▶ 运行 / 刷新</button>
+      </div>
+      <iframe id="preview" title="预览"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ↓↓↓ 老师请在这里填写你的 DeepSeek API Key ↓↓↓
+   把双引号里的 sk-xxxx 换成你自己的密钥即可。
+   注意：密钥会出现在网页源码里，请只用限额的专用密钥。
+   ============================================================ */
+const TEACHER_API_KEY = "";   // 出于安全考虑，请勿把密钥写在网页源码里；留空即可，页面会自动弹出输入框（只保存在本机浏览器）
+const DEFAULT_MODEL   = "deepseek-chat";   // 可改成 deepseek-reasoner
+/* ============================================================ */
+
+const $ = id => document.getElementById(id);
+
+// 若老师没填密钥，则显示输入框让人手动填；填了就直接隐藏、静默使用
+const keyConfigured = TEACHER_API_KEY && TEACHER_API_KEY.startsWith('sk-');
+const apiKeyEl = $('apiKey');
+if (!keyConfigured) {
+  $('apiCard').style.display = '';   // 未配置时把输入卡片显示出来
+  if (localStorage.getItem('ds_api_key')) {
+    apiKeyEl.value = localStorage.getItem('ds_api_key');
+    $('saveKey').checked = true;
+  }
+}
+function getApiKey(){ return keyConfigured ? TEACHER_API_KEY : apiKeyEl.value.trim(); }
+function getModel(){ return keyConfigured ? DEFAULT_MODEL : $('model').value; }
+
+function setStatus(msg, type=''){ const s=$('status'); s.textContent=msg; s.className='status '+type; }
+
+// 生成
+$('genBtn').addEventListener('click', async () => {
+  const key = getApiKey();
+  const prompt = $('prompt').value.trim();
+  if (!key) { setStatus('请先填写 DeepSeek API Key', 'err'); return; }
+  if (!prompt) { setStatus('请先描述你想要的网页', 'err'); return; }
+
+  if (!keyConfigured) {
+    if ($('saveKey').checked) localStorage.setItem('ds_api_key', key);
+    else localStorage.removeItem('ds_api_key');
+  }
+
+  $('genBtn').disabled = true;
+  setStatus('AI 正在生成中，请稍候……');
+
+  const systemMsg = "你是一个网页开发助手。根据用户的需求，生成一个完整、可独立运行的单文件 HTML 网页（包含内联 CSS 和必要的 JavaScript）。要求：代码美观、响应式、可直接在浏览器打开。只输出 HTML 代码本身，不要任何解释文字，不要用 markdown 代码块包裹。";
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: getModel(),
+        messages: [
+          { role: 'system', content: systemMsg },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7
+      })
+    });
+
+    if (!resp.ok) {
+      const t = await resp.text();
+      throw new Error('API 返回错误 ' + resp.status + '：' + t);
+    }
+    const data = await resp.json();
+    let code = data.choices[0].message.content;
+    // 去掉可能出现的 markdown 代码块标记
+    code = code.replace(/^```html\s*/i, '').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    $('codeArea').value = code;
+    runPreview();
+    setStatus('✅ 生成完成！可在左侧修改代码，右侧查看效果。', 'ok');
+  } catch (e) {
+    setStatus('生成失败：' + e.message + '（若为网络/CORS 问题，请在设置了跨域的环境或本地服务器中运行）', 'err');
+  } finally {
+    $('genBtn').disabled = false;
+  }
+});
+
+// 运行预览
+function runPreview(){
+  const code = $('codeArea').value;
+  const iframe = $('preview');
+  iframe.srcdoc = code;
+}
+$('runBtn').addEventListener('click', runPreview);
+
+// 下载
+$('downloadBtn').addEventListener('click', () => {
+  const code = $('codeArea').value.trim();
+  if (!code) { setStatus('还没有可下载的代码', 'err'); return; }
+  const blob = new Blob([code], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'my-webpage.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus('已下载 my-webpage.html', 'ok');
+});
+
+// 清空
+$('clearBtn').addEventListener('click', () => {
+  $('prompt').value=''; $('codeArea').value=''; $('preview').srcdoc='';
+  setStatus('');
+});
+</script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

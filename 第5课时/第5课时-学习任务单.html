@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习任务单 - AI智能体：构建APEC知识助手 | 第5课时</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #f0f5f3;
+  color: #333;
+  min-height: 100vh;
+  line-height: 1.7;
+}
+
+/* ===== Header ===== */
+.header {
+  background: linear-gradient(135deg, #0F6E56, #14a085);
+  color: white;
+  padding: 24px 30px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(15,110,86,0.3);
+}
+.header h1 { font-size: 24px; margin-bottom: 6px; }
+.header .subtitle { font-size: 14px; opacity: 0.85; }
+
+/* ===== Container ===== */
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* ===== Student Info Bar ===== */
+.student-info {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.student-info label { font-size: 14px; color: #0F6E56; font-weight: bold; }
+.student-info input {
+  border: none;
+  border-bottom: 2px solid #14a085;
+  font-size: 14px;
+  padding: 4px 8px;
+  outline: none;
+  flex: 1;
+  min-width: 120px;
+  font-family: inherit;
+}
+.student-info input:focus { border-color: #0F6E56; }
+
+/* ===== Task Section ===== */
+.task-section {
+  background: white;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+.task-header {
+  background: linear-gradient(135deg, #0F6E56, #14a085);
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.task-badge {
+  background: rgba(255,255,255,0.25);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.task-title { font-size: 17px; font-weight: bold; }
+.task-body { padding: 20px 24px; }
+
+/* ===== Instructions ===== */
+.instructions {
+  background: #e8f5f0;
+  border-left: 4px solid #14a085;
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 16px;
+}
+.instructions strong { color: #0F6E56; }
+
+/* ===== Table Style ===== */
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.task-table th {
+  background: #f0f5f3;
+  color: #0F6E56;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid #14a085;
+  font-weight: bold;
+}
+.task-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e8e8e8;
+  vertical-align: top;
+}
+.task-table textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 36px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.task-table textarea:focus { border-color: #14a085; }
+
+/* ===== Prompt Template ===== */
+.prompt-block {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.prompt-block h4 {
+  color: #0F6E56;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.prompt-template {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+.prompt-template .placeholder { color: #f92672; }
+.prompt-template .label { color: #66d9ef; }
+.prompt-example {
+  background: #e8f5f0;
+  border: 1px solid #14a085;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #0F6E56;
+}
+.prompt-example::before {
+  content: "示例：";
+  font-weight: bold;
+}
+.prompt-input {
+  width: 100%;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: "Consolas", monospace;
+  outline: none;
+  transition: border-color 0.2s;
+  min-height: 60px;
+  resize: vertical;
+}
+.prompt-input:focus { border-color: #14a085; }
+
+/* ===== Rules Reference ===== */
+.rules-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.rules-table th {
+  background: #f0f5f3;
+  color: #0F6E56;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid #14a085;
+}
+.rules-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e8e8e8;
+}
+.rule-category {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+}
+.rule-cat-lang { background: #3498db; }
+.rule-cat-length { background: #9b59b6; }
+.rule-cat-honest { background: #e74c3c; }
+.rule-cat-interact { background: #f39c12; }
+.rule-cat-data { background: #1abc9c; }
+.rule-cat-safe { background: #e67e22; }
+.rule-cat-format { background: #2c3e50; }
+
+/* ===== Think Questions ===== */
+.think-question {
+  margin-bottom: 16px;
+}
+.think-question .q-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+.think-question .q-hint {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 6px;
+}
+.think-textarea {
+  width: 100%;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.think-textarea:focus { border-color: #14a085; }
+
+/* ===== Checklist ===== */
+.checklist {
+  list-style: none;
+  padding: 0;
+}
+.checklist li {
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.checklist input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0F6E56;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  padding: 10px 28px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #0F6E56, #14a085);
+  color: white;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,110,86,0.3); }
+.btn-save {
+  background: white;
+  color: #0F6E56;
+  border: 2px solid #0F6E56;
+}
+.btn-save:hover { background: #e8f5f0; }
+
+.action-bar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* ===== Tip Box ===== */
+.tip-box {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #856404;
+  margin-bottom: 14px;
+}
+.tip-box strong { color: #c09000; }
+
+/* ===== Self Assessment ===== */
+.self-assess {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+.self-assess label { font-size: 14px; color: #0F6E56; font-weight: bold; }
+.rating-stars {
+  display: flex;
+  gap: 4px;
+}
+.star-btn {
+  font-size: 24px;
+  cursor: pointer;
+  color: #ddd;
+  background: none;
+  border: none;
+  transition: color 0.2s;
+  font-family: inherit;
+}
+.star-btn.active { color: #f39c12; }
+.star-btn:hover { color: #f1c40f; }
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .header h1 { font-size: 20px; }
+  .container { padding: 16px 10px 40px; }
+  .task-body { padding: 16px 14px; }
+  .student-info { flex-direction: column; gap: 8px; }
+  .student-info input { width: 100%; }
+  .prompt-template { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>学习任务单 · AI智能体：构建APEC知识助手</h1>
+  <p class="subtitle">第5课时 · 「AI遇见APEC」单元 · 课堂随堂填写</p>
+</div>
+
+<div class="container">
+
+  <!-- Student Info -->
+  <div class="student-info">
+    <label>姓名：</label><input type="text" id="studentName" placeholder="请输入姓名">
+    <label>班级：</label><input type="text" id="studentClass" placeholder="请输入班级">
+    <label>日期：</label><input type="date" id="studentDate">
+  </div>
+
+  <!-- ===== Task 1-1 ===== -->
+  <div class="task-section">
+    <div class="task-header">
+      <span class="task-badge">任务1-1</span>
+      <span class="task-title">智能体三要素理解（环节一 · 8分钟）</span>
+    </div>
+    <div class="task-body">
+      <div class="instructions">
+        <strong>说明：</strong>回忆"招聘APEC讲解员"的类比，填写智能体三要素的理解。每格至少写一句话。
+      </div>
+      <table class="task-table">
+        <thead>
+          <tr>
+            <th style="width:20%">三要素</th>
+            <th style="width:30%">招聘讲解员类比</th>
+            <th style="width:25%">平台上的配置项</th>
+            <th style="width:25%">作用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>角色设定</strong></td>
+            <td><textarea placeholder="如：你是谁——什么样的人（性格、身份）"></textarea></td>
+            <td><textarea placeholder="如：角色Prompt输入框"></textarea></td>
+            <td><textarea placeholder="如：决定回答的风格"></textarea></td>
+          </tr>
+          <tr>
+            <td><strong>知识库</strong></td>
+            <td><textarea placeholder="如：你知道什么——学过什么知识"></textarea></td>
+            <td><textarea placeholder="如：知识库上传/输入区域"></textarea></td>
+            <td><textarea placeholder="如：决定能力边界"></textarea></td>
+          </tr>
+          <tr>
+            <td><strong>对话规则</strong></td>
+            <td><textarea placeholder="如：你怎么回答——工作守则"></textarea></td>
+            <td><textarea placeholder="如：规则/约束设置区域"></textarea></td>
+            <td><textarea placeholder="如：决定行为准则"></textarea></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tip-box">
+        <strong>小提示：</strong>Siri / 小爱同学（语音助手）、淘宝客服机器人（智能客服）、抖音推荐（推荐系统）——它们都是智能体！你能说出它们各自的角色、知识库和规则吗？
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Task 3-2: Prompt Template ===== -->
+  <div class="task-section">
+    <div class="task-header">
+      <span class="task-badge">任务3-2</span>
+      <span class="task-title">智能体角色Prompt模板（环节二 · 参考填写）</span>
+    </div>
+    <div class="task-body">
+      <div class="instructions">
+        <strong>说明：</strong>参考下方模板和示例，为你的APEC智能体编写角色Prompt。回忆第1课的"Prompt三要素：角色+任务+约束"——智能体的角色Prompt本质就是结构化Prompt。
+      </div>
+
+      <div class="prompt-block">
+        <h4>角色身份</h4>
+        <div class="prompt-template">
+          <span class="label">你是</span><span class="placeholder">[智能体名称]</span>，<span class="placeholder">[身份描述]</span>。你的性格<span class="placeholder">[性格特点]</span>，像一个<span class="placeholder">[类比角色]</span>。
+        </div>
+        <div class="prompt-example">你是小亚，2026年深圳APEC峰会的官方知识助手。你的性格热情、专业、耐心，像一个博学的导游。</div>
+        <textarea class="prompt-input" placeholder="在此填写你的角色身份..."></textarea>
+      </div>
+
+      <div class="prompt-block">
+        <h4>知识范围</h4>
+        <div class="prompt-template">
+          你了解<span class="placeholder">[知识领域1]</span>、<span class="placeholder">[知识领域2]</span>、<span class="placeholder">[知识领域3]</span>。
+        </div>
+        <div class="prompt-example">你了解APEC的基本信息（21个成员、成立时间、宗旨）、2026年深圳APEC主题和三大优先领域、深圳为什么被选为举办城市。</div>
+        <textarea class="prompt-input" placeholder="在此填写你的知识范围..."></textarea>
+      </div>
+
+      <div class="prompt-block">
+        <h4>回答规则</h4>
+        <div class="prompt-template">
+          1. <span class="placeholder">[规则1]</span><br>
+          2. <span class="placeholder">[规则2]</span><br>
+          3. <span class="placeholder">[规则3]</span><br>
+          4. <span class="placeholder">[规则4]</span>
+        </div>
+        <div class="prompt-example">1. 用初中生能听懂的语言回答 2. 回答控制在200字以内 3. 不确定的信息诚实说"我还不确定" 4. 回答后主动问用户是否还有其他问题</div>
+        <textarea class="prompt-input" placeholder="在此填写你的回答规则（至少3条）..." style="min-height:100px"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Task 3-3: Rules Reference ===== -->
+  <div class="task-section">
+    <div class="task-header">
+      <span class="task-badge">任务3-3</span>
+      <span class="task-title">对话规则参考清单（环节二 · 速查参考）</span>
+    </div>
+    <div class="task-body">
+      <div class="instructions">
+        <strong>说明：</strong>编写规则时参考此清单。记住——"好好回答"这种空话不算规则，规则要<strong>具体、能检查</strong>。
+      </div>
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th style="width:15%">规则类别</th>
+            <th style="width:45%">规则示例</th>
+            <th style="width:40%">解决的问题</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="rule-category rule-cat-lang">语言风格</span></td>
+            <td>用初中生能听懂的语言回答，避免过于专业的术语</td>
+            <td>回答太专业、看不懂</td>
+          </tr>
+          <tr>
+            <td><span class="rule-category rule-cat-length">回答长度</span></td>
+            <td>回答控制在200字以内，重点突出</td>
+            <td>回答太长、没有重点</td>
+          </tr>
+          <tr>
+            <td><span class="rule-category rule-cat-honest">诚实性</span></td>
+            <td>不确定的信息，诚实说"我还不确定这个信息"</td>
+            <td>AI编造信息 / 幻觉</td>
+          </tr>
+          <tr>
+            <td><span class="rule-category rule-cat-interact">互动性</span></td>
+            <td>每次回答后主动问用户是否还有其他问题</td>
+            <td>对话不连贯、不够友好</td>
+          </tr>
+          <tr>
+            <td><span class="rule-category rule-cat-data">数据引用</span></td>
+            <td>回答数据问题时，附带说明数据来源</td>
+            <td>数据来源不明、可信度低</td>
+          </tr>
+          <tr>
+            <td><span class="rule-category rule-cat-safe">安全边界</span></td>
+            <td>不回答与APEC无关的问题，礼貌引导用户回到APEC话题</td>
+            <td>智能体偏离主题</td>
+          </tr>
+          <tr>
+            <td><span class="rule-category rule-cat-format">格式规范</span></td>
+            <td>列举信息时使用序号或项目符号，让回答更清晰</td>
+            <td>回答格式混乱</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== Task 3-1: Creation & Iteration Record ===== -->
+  <div class="task-section">
+    <div class="task-header">
+      <span class="task-badge">任务3-1</span>
+      <span class="task-title">智能体创建与迭代记录（环节三 · 17分钟）</span>
+    </div>
+    <div class="task-body">
+      <div class="instructions">
+        <strong>说明：</strong>记录你创建APEC智能体的全过程。基础版必做，进阶版鼓励选做。<strong>迭代要求：</strong>测试后至少修改1次规则或补充1次知识库。
+      </div>
+
+      <table class="task-table">
+        <tbody>
+          <tr>
+            <td style="width:35%"><strong>你的智能体名称是什么？</strong></td>
+            <td><textarea placeholder="如：APEC小助手"></textarea></td>
+          </tr>
+          <tr>
+            <td><strong>角色设定（你是谁）</strong><br><span style="font-size:12px;color:#999">参考任务3-2模板</span></td>
+            <td><textarea placeholder="填写角色Prompt..."></textarea></td>
+          </tr>
+          <tr>
+            <td><strong>对话规则（至少3条）</strong></td>
+            <td><textarea placeholder="1.
+2.
+3.
+4.（可选）" style="min-height:80px"></textarea></td>
+          </tr>
+          <tr>
+            <td><strong>知识库包含哪些内容？</strong></td>
+            <td><textarea placeholder="如：APEC成员介绍、会议主题、深圳信息..."></textarea></td>
+          </tr>
+          <tr>
+            <td><strong>你是否整合了第3课的数据？</strong></td>
+            <td>
+              <label style="font-size:14px;cursor:pointer"><input type="radio" name="dataIntegrated" value="yes"> 是，已整合</label><br>
+              <label style="font-size:14px;cursor:pointer"><input type="radio" name="dataIntegrated" value="no"> 否，计划课后整合</label>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4 style="color:#0F6E56;margin:16px 0 10px;font-size:15px">测试与迭代记录</h4>
+
+      <table class="task-table">
+        <thead>
+          <tr>
+            <th style="width:5%">#</th>
+            <th style="width:35%">测试问题</th>
+            <th style="width:35%">智能体回答摘要</th>
+            <th style="width:12%">满意？</th>
+            <th style="width:13%">备注</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><textarea placeholder="如：APEC有哪些成员？"></textarea></td>
+            <td><textarea placeholder="记录回答要点..."></textarea></td>
+            <td>
+              <select style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+                <option value="">选择</option>
+                <option value="yes">满意</option>
+                <option value="no">不满意</option>
+              </select>
+            </td>
+            <td><textarea placeholder=""></textarea></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><textarea placeholder="如：2026年APEC在哪里举办？主题是什么？"></textarea></td>
+            <td><textarea placeholder="记录回答要点..."></textarea></td>
+            <td>
+              <select style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+                <option value="">选择</option>
+                <option value="yes">满意</option>
+                <option value="no">不满意</option>
+              </select>
+            </td>
+            <td><textarea placeholder=""></textarea></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><textarea placeholder="如：中国香港是APEC成员吗？"></textarea></td>
+            <td><textarea placeholder="记录回答要点..."></textarea></td>
+            <td>
+              <select style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+                <option value="">选择</option>
+                <option value="yes">满意</option>
+                <option value="no">不满意</option>
+              </select>
+            </td>
+            <td><textarea placeholder=""></textarea></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4 style="color:#0F6E56;margin:16px 0 10px;font-size:15px">迭代优化记录</h4>
+      <table class="task-table">
+        <tbody>
+          <tr>
+            <td style="width:35%"><strong>你修改了什么规则 / 补充了什么知识？</strong></td>
+            <td><textarea placeholder="如：添加了"></textarea></td>
+          </tr>
+          <tr>
+            <td><strong>修改后的效果改善</strong></td>
+            <td><textarea placeholder="如：回答更精炼了，重点更突出"></textarea></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="self-assess">
+        <label>你的智能体自评：</label>
+        <div class="rating-stars" id="ratingStars">
+          <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
+          <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
+          <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
+          <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
+          <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
+        </div>
+        <span id="ratingText" style="font-size:14px;color:#999">未评分</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Task 4-1: AI Governance ===== -->
+  <div class="task-section">
+    <div class="task-header">
+      <span class="task-badge">任务4-1</span>
+      <span class="task-title">AI治理思考（环节四 · 5分钟）</span>
+    </div>
+    <div class="task-body">
+      <div class="instructions">
+        <strong>说明：</strong>从你给智能体定规则的体验出发，思考AI治理的问题。每个问题至少写2句话。
+      </div>
+
+      <div class="think-question">
+        <div class="q-text">1. 你给智能体写的规则里，哪一条最重要？为什么？</div>
+        <div class="q-hint">提示：想想如果不写这条规则，智能体可能犯什么错</div>
+        <textarea class="think-textarea" placeholder="如：最重要的一条是"></textarea>
+      </div>
+
+      <div class="think-question">
+        <div class="q-text">2. 如果所有智能体都没有规则，会出现什么问题？</div>
+        <div class="q-hint">提示：想想AI编造信息、偏离主题、回答不当等情况</div>
+        <textarea class="think-textarea" placeholder="如：智能体可能..."></textarea>
+      </div>
+
+      <div class="think-question">
+        <div class="q-text">3. 你给智能体定规则，和国家给AI公司定法律，有什么相似之处？</div>
+        <div class="q-hint">提示：本质上都是约束AI的什么？</div>
+        <textarea class="think-textarea" placeholder="如：相似之处在于..."></textarea>
+      </div>
+
+      <div class="think-question">
+        <div class="q-text">4. 为什么21个APEC经济体需要一起讨论AI规则？</div>
+        <div class="q-hint">提示：AI是全球性技术，经济体之间经济联系紧密</div>
+        <textarea class="think-textarea" placeholder="如：因为AI是..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Post-class Tasks ===== -->
+  <div class="task-section">
+    <div class="task-header">
+      <span class="task-badge">课后任务</span>
+      <span class="task-title">分层任务与思考题</span>
+    </div>
+    <div class="task-body">
+      <div class="instructions">
+        <strong>说明：</strong>根据你的课堂完成情况选择课后任务。思考题为下节课辩论准备。
+      </div>
+
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="taskBasic">
+          <label for="taskBasic" style="cursor:pointer">
+            <strong style="color:#27ae60">基础层（必做）：</strong>完善课堂上的APEC智能体，至少迭代2轮（修改规则或补充知识库），确保智能体能准确回答5个以上APEC相关问题。保存智能体链接并提交。
+          </label>
+        </li>
+        <li>
+          <input type="checkbox" id="taskExt">
+          <label for="taskExt" style="cursor:pointer">
+            <strong style="color:#f39c12">拓展层（选做）：</strong>为智能体添加新功能——把第3课数据（GDP/人口/贸易额）输入知识库，添加规则"回答数据问题时附带数据来源和数值"。
+          </label>
+        </li>
+        <li>
+          <input type="checkbox" id="taskChall">
+          <label for="taskChall" style="cursor:pointer">
+            <strong style="color:#e74c3c">挑战层（选做）：</strong>创建第二个智能体——"APEC文化导览员"，介绍21个经济体的文化特色、美食、旅游景点。对比两个智能体，思考"智能体的专业性来自哪里"。
+          </label>
+        </li>
+      </ul>
+
+      <div style="margin-top:16px;padding:14px;background:#f0f5f3;border-radius:10px;border-left:4px solid #0F6E56">
+        <div style="font-weight:bold;color:#0F6E56;font-size:15px;margin-bottom:6px">思考题（为第6课辩论做准备）</div>
+        <div style="font-size:14px;color:#555;margin-bottom:10px">
+          你觉得用AI做的作品（海报、文章、网页、智能体）应该标注"AI制作"吗？为什么？下节课我们要辩论这个问题，请提前想好你的观点和理由。
+        </div>
+        <textarea class="think-textarea" placeholder="我的观点和理由..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <button class="btn btn-save" onclick="saveToLocal()">保存到本地</button>
+    <button class="btn btn-primary" onclick="printTaskSheet()">打印 / 导出PDF</button>
+  </div>
+
+</div>
+
+<script>
+let currentRating = 0;
+
+function setRating(val) {
+  currentRating = val;
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    const btnVal = parseInt(btn.dataset.val);
+    if (btnVal <= val) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  const labels = ['', '不太满意', '一般', '还不错', '满意', '非常满意'];
+  document.getElementById('ratingText').textContent = val + '分 - ' + labels[val];
+}
+
+function saveToLocal() {
+  const name = document.getElementById('studentName').value || '未填写';
+  const data = {
+    studentName: name,
+    studentClass: document.getElementById('studentClass').value,
+    studentDate: document.getElementById('studentDate').value,
+    rating: currentRating,
+    timestamp: new Date().toISOString()
+  };
+  // Save all textareas
+  document.querySelectorAll('textarea').forEach((el, i) => {
+    data['textarea_' + i] = el.value;
+  });
+  // Save radio buttons
+  document.querySelectorAll('input[type="radio"]:checked').forEach(el => {
+    data['radio_' + el.name] = el.value;
+  });
+  // Save checkboxes
+  document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+    data['check_' + el.id] = el.checked;
+  });
+
+  try {
+    localStorage.setItem('lesson5_tasksheet', JSON.stringify(data));
+    alert('已保存到浏览器本地存储！\n注意：清除浏览器数据会丢失记录，建议使用"打印/导出PDF"保存完整版本。');
+  } catch(e) {
+    alert('保存失败，请使用打印功能保存。');
+  }
+}
+
+function loadFromLocal() {
+  try {
+    const saved = localStorage.getItem('lesson5_tasksheet');
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    if (data.studentName) document.getElementById('studentName').value = data.studentName;
+    if (data.studentClass) document.getElementById('studentClass').value = data.studentClass;
+    if (data.studentDate) document.getElementById('studentDate').value = data.studentDate;
+    if (data.rating) setRating(data.rating);
+    // Restore textareas
+    document.querySelectorAll('textarea').forEach((el, i) => {
+      if (data['textarea_' + i]) el.value = data['textarea_' + i];
+    });
+    // Restore radios
+    document.querySelectorAll('input[type="radio"]').forEach(el => {
+      if (data['radio_' + el.name] === el.value) el.checked = true;
+    });
+    // Restore checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+      if (data['check_' + el.id]) el.checked = true;
+    });
+  } catch(e) {}
+}
+
+function printTaskSheet() {
+  window.print();
+}
+
+// Auto-load on page open
+loadFromLocal();
+</script>
+
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

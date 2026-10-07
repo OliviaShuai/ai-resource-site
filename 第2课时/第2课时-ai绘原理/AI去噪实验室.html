@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI去噪实验室 · 扩散模型互动体验</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #0f1923;
+    color: #e0e6ed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 24px;
+    color: #4fc3f7;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #78909c;
+    margin-bottom: 20px;
+    text-align: center;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+  /* 关卡选择 */
+  .level-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .level-btn {
+    padding: 10px 20px;
+    border: 2px solid #37474f;
+    background: #1a2a3a;
+    color: #90a4ae;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+  .level-btn:hover { border-color: #4fc3f7; color: #4fc3f7; }
+  .level-btn.active {
+    background: linear-gradient(135deg, #1565c0, #0288d1);
+    border-color: #4fc3f7;
+    color: #fff;
+  }
+  /* 画布区域 */
+  .canvas-wrap {
+    position: relative;
+    border: 3px solid #37474f;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+  }
+  canvas { display: block; cursor: crosshair; }
+  /* 控制区 */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s;
+  }
+  .btn-reset { background: #37474f; color: #fff; }
+  .btn-reset:hover { background: #455a64; }
+  .btn-reveal { background: #e65100; color: #fff; }
+  .btn-reveal:hover { background: #ef6c00; }
+  /* 进度条 */
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .progress-label { font-size: 13px; color: #90a4ae; white-space: nowrap; }
+  .progress-bar {
+    width: 200px;
+    height: 12px;
+    background: #263238;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    width: 0%;
+    transition: width 0.3s;
+  }
+  /* 信息提示 */
+  .info-box {
+    margin-top: 16px;
+    padding: 14px 20px;
+    background: #1a2a3a;
+    border-left: 4px solid #4fc3f7;
+    border-radius: 8px;
+    max-width: 600px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #b0bec5;
+  }
+  .info-box .highlight { color: #4fc3f7; font-weight: bold; }
+  .info-box .ai-think { color: #ff9800; font-weight: bold; }
+  /* 成功提示 */
+  .success-msg {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.85);
+    color: #4caf50;
+    padding: 20px 40px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    display: none;
+    text-align: center;
+    border: 2px solid #4caf50;
+  }
+  .success-msg.show { display: block; animation: pop 0.4s; }
+  @keyframes pop { 0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+  /* 步数概念 */
+  .step-info {
+    font-size: 13px;
+    color: #78909c;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .step-info .num { color: #4fc3f7; font-weight: bold; font-size: 16px; }
+</style>
+</head>
+<body>
+<div style="background:#FFF7ED;border-bottom:1px solid #FDE68A;color:#92400E;font-size:13px;padding:9px 14px;text-align:center;line-height:1.7">
+  ⚠️ 本页是旧版。建议使用升级版：
+  <a href="../AI%E7%BB%98%E7%94%BB%E5%8E%9F%E7%90%86%E5%AE%9E%E9%AA%8C%E5%AE%A4.html" style="color:#DB2777;font-weight:700;text-decoration:none">
+    打开「AI 绘画原理实验室」→</a>
+  （去噪动画 + Prompt 详细度对比 + 五要素 Prompt 拼装器）
+</div>
+
+<h1>🔬 AI去噪实验室</h1>
+<p class="subtitle">
+  AI画画的秘密：从满屏噪声中一步步"擦"出清晰图像。<br>
+  用鼠标在画布上涂抹，模拟AI"去噪"过程，看看噪声下藏着什么！
+</p>
+
+<!-- 关卡选择 -->
+<div class="level-bar">
+  <button class="level-btn active" onclick="switchLevel(0)">🐱 关卡1：猫</button>
+  <button class="level-btn" onclick="switchLevel(1)">🍎 关卡2：苹果</button>
+  <button class="level-btn" onclick="switchLevel(2)">⭐ 关卡3：APEC标志</button>
+</div>
+
+<!-- 画布 -->
+<div class="canvas-wrap">
+  <canvas id="canvas" width="480" height="360"></canvas>
+  <div class="success-msg" id="successMsg"></div>
+</div>
+
+<!-- 步数显示 -->
+<div class="step-info" id="stepInfo">
+  已去噪步数：<span class="num" id="stepNum">0</span> 步 ｜
+  噪声剩余：<span class="num" id="noiseLeft">100</span>%
+</div>
+
+<!-- 控制按钮 -->
+<div class="controls">
+  <div class="progress-wrap">
+    <span class="progress-label">去噪进度</span>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+  <button class="btn btn-reset" onclick="resetCanvas()">🔄 重新开始</button>
+  <button class="btn btn-reveal" onclick="aiAutoDenoise()">🤖 让AI自动去噪</button>
+</div>
+
+<!-- 原理说明 -->
+<div class="info-box" id="infoBox">
+  <span class="highlight">怎么玩：</span>用鼠标在画布上涂抹，你涂抹过的地方噪声会变淡，隐藏的图像会逐渐显现。<br>
+  <span class="ai-think">想想看：</span>你刚才做的，就是AI扩散模型的简化版——从混乱的噪声中一步步"清理"出目标形象。AI每去一步噪声，画面就清晰一点。
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// 三个关卡的隐藏图像（用Canvas绘制简单图形）
+const levels = [
+  { name: '猫', draw: drawCat },
+  { name: '苹果', draw: drawApple },
+  { name: 'APEC标志', draw: drawAPEC }
+];
+
+let currentLevel = 0;
+let noiseData = null;     // 噪声像素数据
+let denoiseMask = null;   // 去噪遮罩（每个像素的去噪程度0-255）
+let stepCount = 0;
+let isDrawing = false;
+
+// ---- 绘制隐藏图像 ----
+function drawCat(ctx, w, h) {
+  ctx.fillStyle = '#FFD54F';
+  // 头
+  ctx.beginPath();
+  ctx.ellipse(w/2, h/2, 70, 60, 0, 0, Math.PI*2);
+  ctx.fill();
+  // 耳朵
+  ctx.beginPath();
+  ctx.moveTo(w/2-60, h/2-30);
+  ctx.lineTo(w/2-45, h/2-70);
+  ctx.lineTo(w/2-30, h/2-30);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w/2+30, h/2-30);
+  ctx.lineTo(w/2+45, h/2-70);
+  ctx.lineTo(w/2+60, h/2-30);
+  ctx.fill();
+  // 眼睛
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.ellipse(w/2-25, h/2-5, 6, 10, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(w/2+25, h/2-5, 6, 10, 0, 0, Math.PI*2); ctx.fill();
+  // 鼻子嘴
+  ctx.fillStyle = '#E91E63';
+  ctx.beginPath(); ctx.ellipse(w/2, h/2+12, 6, 4, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(w/2, h/2+16); ctx.lineTo(w/2, h/2+24); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w/2, h/2+24); ctx.quadraticCurveTo(w/2-12, h/2+30, w/2-16, h/2+26); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w/2, h/2+24); ctx.quadraticCurveTo(w/2+12, h/2+30, w/2+16, h/2+26); ctx.stroke();
+  // 胡须
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(w/2-35, h/2+15); ctx.lineTo(w/2-60, h/2+10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w/2-35, h/2+20); ctx.lineTo(w/2-62, h/2+22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w/2+35, h/2+15); ctx.lineTo(w/2+60, h/2+10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w/2+35, h/2+20); ctx.lineTo(w/2+62, h/2+22); ctx.stroke();
+}
+
+function drawApple(ctx, w, h) {
+  // 果实
+  ctx.fillStyle = '#E53935';
+  ctx.beginPath();
+  ctx.ellipse(w/2, h/2+10, 65, 70, 0, 0, Math.PI*2);
+  ctx.fill();
+  // 高光
+  ctx.fillStyle = '#EF5350';
+  ctx.beginPath();
+  ctx.ellipse(w/2-25, h/2-10, 20, 35, -0.3, 0, Math.PI*2);
+  ctx.fill();
+  // 叶子
+  ctx.fillStyle = '#43A047';
+  ctx.beginPath();
+  ctx.ellipse(w/2+15, h/2-55, 25, 12, -0.5, 0, Math.PI*2);
+  ctx.fill();
+  // 茎
+  ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(w/2, h/2-50); ctx.lineTo(w/2+5, h/2-58);
+  ctx.stroke();
+}
+
+function drawAPEC(ctx, w, h) {
+  // 蓝金配色背景圆
+  ctx.fillStyle = '#1565C0';
+  ctx.beginPath();
+  ctx.arc(w/2, h/2, 80, 0, Math.PI*2);
+  ctx.fill();
+  // APEC文字
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 32px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('APEC', w/2, h/2+5);
+  // 2026
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 14px Arial';
+  ctx.fillText('2026', w/2, h/2+25);
+  // 周围21颗星
+  ctx.fillStyle = '#FFD700';
+  for (let i = 0; i < 21; i++) {
+    const angle = (i / 21) * Math.PI * 2 - Math.PI/2;
+    const sx = w/2 + Math.cos(angle) * 95;
+    const sy = h/2 + Math.sin(angle) * 95;
+    drawStar(ctx, sx, sy, 6, 5);
+  }
+}
+
+function drawStar(ctx, cx, cy, r, points) {
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const angle = (i / (points*2)) * Math.PI * 2 - Math.PI/2;
+    const radius = i % 2 === 0 ? r : r * 0.4;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ---- 生成噪声 ----
+function generateNoise() {
+  const imgData = ctx.createImageData(W, H);
+  for (let i = 0; i < imgData.data.length; i += 4) {
+    const v = Math.floor(Math.random() * 256);
+    imgData.data[i] = v;       // R
+    imgData.data[i+1] = v;    // G
+    imgData.data[i+2] = v;    // B
+    imgData.data[i+3] = 255;  // A
+  }
+  return imgData;
+}
+
+// ---- 初始化画布 ----
+function initCanvas() {
+  // 先绘制隐藏图像到离屏画布
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = W; offCanvas.height = H;
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.fillStyle = '#1a1a2e';
+  offCtx.fillRect(0, 0, W, H);
+  levels[currentLevel].draw(offCtx, W, H);
+
+  // 生成噪声
+  noiseData = generateNoise();
+  // 去噪遮罩（初始全0=完全噪声覆盖）
+  denoiseMask = new Uint8ClampedArray(W * H);
+  denoiseMask.fill(0); // 0=满噪声, 255=完全去噪
+
+  stepCount = 0;
+  renderCanvas();
+  updateProgress();
+  document.getElementById('successMsg').classList.remove('show');
+}
+
+// ---- 渲染画布（根据遮罩混合噪声和图像）----
+function renderCanvas() {
+  // 先画隐藏图像
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = W; offCanvas.height = H;
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.fillStyle = '#1a1a2e';
+  offCtx.fillRect(0, 0, W, H);
+  levels[currentLevel].draw(offCtx, W, H);
+  const imgData = offCtx.getImageData(0, 0, W, H);
+
+  // 混合：根据遮罩值在噪声和图像间插值
+  const finalData = ctx.createImageData(W, H);
+  for (let i = 0; i < finalData.data.length; i += 4) {
+    const idx = i / 4;
+    const mask = denoiseMask[idx] / 255; // 0=噪声, 1=图像
+    finalData.data[i]   = noiseData.data[i]   * (1 - mask) + imgData.data[i]   * mask;
+    finalData.data[i+1] = noiseData.data[i+1] * (1 - mask) + imgData.data[i+1] * mask;
+    finalData.data[i+2] = noiseData.data[i+2] * (1 - mask) + imgData.data[i+2] * mask;
+    finalData.data[i+3] = 255;
+  }
+  ctx.putImageData(finalData, 0, 0);
+}
+
+// ---- 鼠标涂抹去噪 ----
+function denoiseAt(x, y, radius) {
+  let changed = false;
+  for (let py = y - radius; py <= y + radius; py++) {
+    for (let px = x - radius; px <= x + radius; px++) {
+      if (px < 0 || px >= W || py < 0 || py >= H) continue;
+      const dist = Math.sqrt((px - x) ** 2 + (py - y) ** 2);
+      if (dist > radius) continue;
+      const idx = py * W + px;
+      // 渐进去噪：每次涂抹增加遮罩值
+      const increase = Math.floor(40 * (1 - dist / radius));
+      if (denoiseMask[idx] < 255) {
+        denoiseMask[idx] = Math.min(255, denoiseMask[idx] + increase);
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
+// ---- 鼠标事件 ----
+canvas.addEventListener('mousedown', (e) => {
+  isDrawing = true;
+  handleDraw(e);
+});
+canvas.addEventListener('mousemove', (e) => {
+  if (isDrawing) handleDraw(e);
+});
+canvas.addEventListener('mouseup', () => { isDrawing = false; });
+canvas.addEventListener('mouseleave', () => { isDrawing = false; });
+// 触摸支持
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault(); isDrawing = true; handleDraw(e.touches[0]);
+});
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault(); if (isDrawing) handleDraw(e.touches[0]);
+});
+canvas.addEventListener('touchend', (e) => { e.preventDefault(); isDrawing = false; });
+
+function handleDraw(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = Math.floor((e.clientX - rect.left) * scaleX);
+  const y = Math.floor((e.clientY - rect.top) * scaleY);
+  if (denoiseAt(x, y, 25)) {
+    stepCount++;
+    renderCanvas();
+    updateProgress();
+  }
+}
+
+// ---- 更新进度 ----
+function updateProgress() {
+  let cleared = 0;
+  for (let i = 0; i < denoiseMask.length; i++) {
+    if (denoiseMask[i] >= 200) cleared++;
+  }
+  const percent = Math.round((cleared / denoiseMask.length) * 100);
+  document.getElementById('progressFill').style.width = percent + '%';
+  document.getElementById('stepNum').textContent = stepCount;
+  document.getElementById('noiseLeft').textContent = Math.max(0, 100 - percent);
+
+  if (percent >= 70) {
+    const msg = document.getElementById('successMsg');
+    msg.innerHTML = '🎉 去噪成功！<br><span style="font-size:14px;color:#b0bec5">你刚刚做的事，就是AI扩散模型的简化版</span>';
+    msg.classList.add('show');
+  }
+}
+
+// ---- 切换关卡 ----
+function switchLevel(idx) {
+  currentLevel = idx;
+  document.querySelectorAll('.level-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+  initCanvas();
+}
+
+// ---- 重新开始 ----
+function resetCanvas() {
+  initCanvas();
+}
+
+// ---- AI自动去噪（演示扩散模型多步去噪）----
+function aiAutoDenoise() {
+  resetCanvas();
+  let step = 0;
+  const interval = setInterval(() => {
+    step++;
+    // AI按"步"去噪：每步全局增加少量
+    for (let i = 0; i < denoiseMask.length; i++) {
+      denoiseMask[i] = Math.min(255, denoiseMask[i] + Math.random() * 30);
+    }
+    stepCount++;
+    renderCanvas();
+    updateProgress();
+    if (step >= 20) {
+      clearInterval(interval);
+      const info = document.getElementById('infoBox');
+      info.innerHTML = `
+        <span class="ai-think">AI自动去噪演示完成！</span><br>
+        注意看：AI不是一次性擦掉噪声，而是<span class="highlight">分20步逐步去噪</span>，每一步画面都更清晰一点。<br>
+        这就是扩散模型的核心：<span class="highlight">从纯噪声出发，经过多步去噪，逐步还原出清晰图像</span>。<br>
+        你的文字Prompt，就是在告诉AI每一步该往什么方向去噪。
+      `;
+    }
+  }, 200);
+}
+
+// ---- 初始化 ----
+initCanvas();
+</script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>

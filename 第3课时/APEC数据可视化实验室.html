@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEC 数据可视化实验室 · 让数据说话 | AI遇见APEC 第3课时</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --main:#0284C7;--main2:#0EA5E9;--accent:#F59E0B;
+    --soft:#EFF6FF;--ink:#0F172A;--muted:#64748B;--line:#E2E8F0;
+    --ok:#15803D;--ok-soft:#ECFDF5;--warn:#B45309;--warn-soft:#FFFBEB;--bad:#B91C1C;--bad-soft:#FEF2F2;
+  }
+  body{font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+    background:#F1F5F9;color:var(--ink);line-height:1.8;padding-bottom:50px}
+  .hd{background:linear-gradient(135deg,#082F49,var(--main) 60%,var(--main2));color:#fff;
+    padding:26px 20px 22px;position:relative;overflow:hidden}
+  .hd::after{content:"";position:absolute;right:-60px;bottom:-90px;width:260px;height:260px;
+    border-radius:50%;background:rgba(255,255,255,.08)}
+  .hd-in{max-width:1060px;margin:0 auto;position:relative;z-index:2}
+  .hd .tag{font-size:12.5px;letter-spacing:2px;opacity:.9}
+  .hd h1{font-size:25px;margin:6px 0}
+  .hd p{font-size:13.5px;opacity:.93;max-width:780px}
+  .wrap{max-width:1060px;margin:0 auto;padding:20px 16px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;
+    box-shadow:0 8px 24px rgba(15,23,42,.06);margin-bottom:16px}
+  .card h2{font-size:16.5px;display:flex;align-items:center;gap:9px}
+  .card h2 .n{width:28px;height:28px;border-radius:9px;background:var(--soft);color:var(--main);
+    font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .card .sub{font-size:13px;color:var(--muted);margin:4px 0 12px}
+  .ctrls{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:14px}
+  .chip{border:1.5px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;
+    padding:6px 15px;font-size:13px;cursor:pointer;font-family:inherit;transition:.16s}
+  .chip:hover{border-color:var(--main);color:var(--main)}
+  .chip.on{background:var(--main);border-color:var(--main);color:#fff;font-weight:700}
+  .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+  .chartbox{border:1px solid var(--line);border-radius:14px;padding:12px;background:#FCFDFF;
+    overflow-x:auto}
+  svg{display:block;margin:0 auto;max-width:100%;height:auto}
+  .insight{margin-top:14px;background:var(--soft);border-left:4px solid var(--main);border-radius:10px;
+    padding:12px 15px;font-size:13.5px;color:#0C4A6E}
+  .insight b{color:var(--main)}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  thead th{background:var(--main);color:#fff;padding:9px 12px;text-align:left;white-space:nowrap;
+    cursor:pointer;user-select:none;font-size:13px}
+  thead th:hover{background:#0369A1}
+  tbody td{padding:7px 12px;border-top:1px solid var(--line)}
+  tbody tr:nth-child(even){background:#FAFCFF}
+  tbody tr:hover{background:var(--soft)}
+  .tw{max-height:380px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+  .tw thead th{position:sticky;top:0;z-index:2}
+  .q{border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:11px}
+  .q p{font-size:14.5px;font-weight:600;margin-bottom:9px}
+  .opts{display:flex;flex-wrap:wrap;gap:8px}
+  .opt{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 15px;
+    font-size:13.5px;cursor:pointer;font-family:inherit;transition:.16s}
+  .opt:hover{border-color:var(--main);color:var(--main)}
+  .opt.ok{border-color:#6EE7B7;background:var(--ok-soft);color:var(--ok);font-weight:700}
+  .opt.no{border-color:#FCA5A5;background:var(--bad-soft);color:var(--bad)}
+  .fb{font-size:13px;margin-top:9px;display:none;line-height:1.75}
+  .fb.show{display:block}
+  .fb.ok{color:var(--ok)} .fb.no{color:var(--bad)}
+  .prompt{background:#0F172A;color:#E2E8F0;border-radius:12px;padding:14px 16px;font-size:13px;
+    line-height:1.85;white-space:pre-wrap;max-height:230px;overflow:auto;
+    font-family:Consolas,"Courier New",monospace}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .btn{border:none;border-radius:10px;padding:9px 18px;font-size:13.5px;font-weight:700;
+    cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--main),var(--main2));color:#fff}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:#fff;color:var(--main);border:1.5px solid var(--line)}
+  .tip{background:var(--warn-soft);border:1px solid #FDE68A;border-radius:12px;padding:12px 15px;
+    font-size:13.5px;color:#78350F;margin-top:12px;line-height:1.8}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted);margin-top:10px}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .foot{text-align:center;font-size:12.5px;color:var(--muted);margin-top:22px;line-height:1.9}
+  .foot a{color:var(--main)}
+  @media(max-width:720px){ .hd h1{font-size:21px} .sep{display:none} }
+</style>
+</head>
+<body>
+
+<header class="hd"><div class="hd-in">
+  <div class="tag">AI遇见APEC · 第3课时 · 配套学习资源</div>
+  <h1>📊 APEC 数据可视化实验室</h1>
+  <p>21 个经济体的真实数据在这里等你：换一种图表，就换一个看数据的角度。
+     先判断“这个问题该用什么图”，再动手生成图表，最后用 AI 帮你读出规律——但别忘了自己验证。</p>
+</div></header>
+
+<div class="wrap">
+
+  <!-- 1. 图表生成器 -->
+  <div class="card">
+    <h2><span class="n">1</span>一键出图：同一份数据，不同的看法</h2>
+    <div class="sub">先选指标，再选图表类型。观察：同一组数字，换个图表，你能看出的东西一样吗？</div>
+    <div class="ctrls">
+      <span style="font-size:13px;color:var(--muted)">指标：</span>
+      <button class="chip on" data-metric="gdp">GDP（万亿美元）</button>
+      <button class="chip" data-metric="pop">人口（亿）</button>
+      <button class="chip" data-metric="trade">贸易总额（万亿美元）</button>
+      <span class="sep"></span>
+      <span style="font-size:13px;color:var(--muted)">图表：</span>
+      <button class="chip on" data-chart="bar">横向柱状图</button>
+      <button class="chip" data-chart="col">纵向柱状图</button>
+      <button class="chip" data-chart="pie">饼图</button>
+      <button class="chip" data-chart="scatter">散点图</button>
+    </div>
+    <div class="chartbox" id="chartbox"></div>
+    <div class="insight" id="insight"></div>
+    <div class="tip">
+      <b>专业提醒：</b>图表再漂亮，也要写清<b>数据来源和年份</b>。
+      本页数据为 2023 年近似值，来源：世界银行公开数据 / APEC 官网（教学用，非最新官方数据）。
+    </div>
+  </div>
+
+  <!-- 2. 数据表 -->
+  <div class="card">
+    <h2><span class="n">2</span>原始数据表（点击表头可排序）</h2>
+    <div class="sub">先看数字，再看上面的图表——感受一下“5 秒挑战”里那种差别。</div>
+    <div class="tw">
+      <table id="dtable">
+        <thead><tr>
+          <th data-k="name">经济体</th>
+          <th data-k="gdp">GDP（万亿美元）</th>
+          <th data-k="pop">人口（亿）</th>
+          <th data-k="trade">贸易总额（万亿美元）</th>
+          <th data-k="per">人均 GDP（万美元）</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="tip">
+      <b>算一算：</b>人均 GDP = GDP ÷ 人口。试试看，人均 GDP 最高的经济体，是不是 GDP 总量最高的那一个？
+    </div>
+  </div>
+
+  <!-- 3. 图表匹配小游戏 -->
+  <div class="card">
+    <h2><span class="n">3</span>图表匹配小游戏：这个问题该用什么图？</h2>
+    <div class="sub">先自己想，再点选项。选错了也没关系，解析会告诉你为什么。</div>
+    <div id="quizbox"></div>
+  </div>
+
+  <!-- 4. AI 助手 Prompt -->
+  <div class="card">
+    <h2><span class="n">4</span>让 AI 帮你分析（Prompt 一键复制）</h2>
+    <div class="sub">复制下面这段到你的 AI 对话工具里，看看它会给出什么结论——然后回到上面的数据表，逐条验证。</div>
+    <div class="prompt" id="aiprompt"></div>
+    <div class="btns">
+      <button class="btn" id="btnCopy">📋 复制这段 Prompt</button>
+      <button class="btn ghost" id="btnCopySmall">📋 复制“只给 5 个经济体”的版本（做对比实验）</button>
+    </div>
+    <div class="tip">
+      <b>验证任务：</b>AI 说出的每一条结论，回到数据表里核对一遍：
+      它说的数字对不对？有没有漏掉重要信息？只给 5 个经济体时，它的结论是不是变片面了？
+      <b>记住：人提问 + AI 分析 + 人判断 = 数据洞察。</b>
+    </div>
+  </div>
+
+  <div class="foot">
+    AI遇见APEC · 六课时单元 · 第3课时《AI 数据可视化：APEC 经济体数据对比》配套资源<br>
+    数据来源：世界银行公开数据 / APEC 官网（2023 年近似值，仅供教学使用）·
+    <a href="%E7%AC%AC3%E8%AF%BE%E6%97%B6_%E7%BD%91%E9%A1%B5%E6%95%99%E6%9D%90_AI%E6%95%B0%E6%8D%AE%E5%8F%AF%E8%A7%86%E5%8C%96.html">返回本课网页教材</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------------- 数据 ---------------- */
+  var DATA = [
+    ['美国',27.36,3.35,5.30], ['中国',17.79,14.10,6.02], ['日本',4.21,1.24,1.52],
+    ['加拿大',2.14,0.40,0.92], ['俄罗斯',1.86,1.44,0.79], ['墨西哥',1.79,1.29,0.82],
+    ['韩国',1.71,0.52,1.27], ['澳大利亚',1.69,0.27,0.72], ['印度尼西亚',1.37,2.78,0.52],
+    ['中国台北',0.79,0.24,0.51], ['泰国',0.51,0.72,0.49], ['新加坡',0.50,0.06,0.97],
+    ['菲律宾',0.44,1.17,0.20], ['越南',0.43,1.00,0.36], ['马来西亚',0.43,0.34,0.52],
+    ['中国香港',0.39,0.07,1.02], ['智利',0.32,0.20,0.16], ['秘鲁',0.28,0.34,0.13],
+    ['新西兰',0.25,0.05,0.13], ['文莱',0.15,0.004,0.03], ['巴布亚新几内亚',0.03,0.10,0.02]
+  ].map(function(r){
+    return { name:r[0], gdp:r[1], pop:r[2], trade:r[3], per: +(r[1]/r[2]).toFixed(2) };
+  });
+
+  var METRIC = { gdp:'GDP（万亿美元）', pop:'人口（亿）', trade:'贸易总额（万亿美元）' };
+  var COLORS = ['#0284C7','#0EA5E9','#38BDF8','#7DD3FC','#A5B4FC','#818CF8','#C084FC','#E879F9',
+                '#FB7185','#FBBF24','#34D399','#4ADE80','#2DD4BF','#60A5FA','#F472B6','#FCD34D',
+                '#93C5FD','#FCA5A5','#86EFAC','#C4B5FD','#FDE68A'];
+
+  var metric = 'gdp', chart = 'bar', sortK = 'gdp', sortDir = -1;
+
+  /* ---------------- 图表渲染 ---------------- */
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function rowsBy(k, dir){
+    return DATA.slice().sort(function(a,b){
+      var x = a[k], y = b[k];
+      if(typeof x === 'string') return dir * x.localeCompare(y, 'zh');
+      return dir * (x - y);
+    });
+  }
+
+  function renderBar(){
+    var rows = rowsBy(metric, -1);
+    var max = Math.max.apply(null, rows.map(function(r){ return r[metric]; }));
+    var labelW = 118, barMax = 480, rowH = 26, pad = 26;
+    var H = rows.length * rowH + pad*2, W = labelW + barMax + 96;
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">';
+    rows.forEach(function(r, i){
+      var y = pad + i*rowH;
+      var w = Math.max(2, r[metric]/max * barMax);
+      var isCN = r.name === '中国';
+      s += '<text x="' + (labelW-10) + '" y="' + (y+16) + '" text-anchor="end" font-size="12.5" ' +
+           'fill="' + (isCN ? '#B91C1C' : '#334155') + '" font-weight="' + (isCN?700:400) + '">' + esc(r.name) + '</text>';
+      s += '<rect x="' + labelW + '" y="' + y + '" width="' + w.toFixed(1) + '" height="17" rx="4" fill="' +
+           (isCN ? '#DC2626' : (i<3 ? '#0284C7' : '#7DD3FC')) + '"></rect>';
+      s += '<text x="' + (labelW + w + 7) + '" y="' + (y+13) + '" font-size="12" fill="#475569">' +
+           r[metric] + '</text>';
+    });
+    s += '</svg>';
+    document.getElementById('chartbox').innerHTML = s;
+    var top = rows[0], second = rows[1];
+    setInsight('这份数据里，<b>' + esc(top.name) + '</b> 的' + METRIC[metric] + '最高（' + top[metric] +
+      '），排第二的是 <b>' + esc(second.name) + '</b>（' + second[metric] + '）。' +
+      '柱状图最适合“比大小”——21 个对象谁高谁低，一眼就能排出来。');
+  }
+
+  function renderCol(){
+    var rows = rowsBy(metric, -1);
+    var max = Math.max.apply(null, rows.map(function(r){ return r[metric]; }));
+    var W = 760, H = 360, padL = 54, padB = 108, padT = 24;
+    var cw = (W - padL - 20) / rows.length;
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">';
+    for(var g=0; g<=4; g++){
+      var y = padT + (H-padB-padT) * g/4;
+      s += '<line x1="' + padL + '" y1="' + y + '" x2="' + (W-14) + '" y2="' + y + '" stroke="#E2E8F0"></line>';
+      s += '<text x="' + (padL-7) + '" y="' + (y+4) + '" text-anchor="end" font-size="11" fill="#94A3B8">' +
+           (max*(1-g/4)).toFixed(1) + '</text>';
+    }
+    rows.forEach(function(r, i){
+      var h = r[metric]/max * (H-padB-padT);
+      var x = padL + i*cw + cw*0.18, bw = cw*0.64;
+      var y = H - padB - h;
+      var isCN = r.name === '中国';
+      s += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) +
+           '" height="' + h.toFixed(1) + '" rx="3" fill="' + (isCN?'#DC2626':'#0EA5E9') + '"></rect>';
+      s += '<text x="' + (x+bw/2).toFixed(1) + '" y="' + (H-padB+14) + '" font-size="10.5" fill="#475569" ' +
+           'text-anchor="end" transform="rotate(-55 ' + (x+bw/2).toFixed(1) + ' ' + (H-padB+14) + ')">' +
+           esc(r.name) + '</text>';
+    });
+    s += '</svg>';
+    document.getElementById('chartbox').innerHTML = s;
+    setInsight('纵向柱状图适合对象不太多时使用；21 个经济体挤在一起，'
+      + '标签就会变得拥挤——所以经济学家更爱用<b>横向条形图</b>来看 21 个经济体的排名。');
+  }
+
+  function renderPie(){
+    var rows = rowsBy(metric, -1);
+    var top = rows.slice(0, 8), rest = rows.slice(8);
+    var restSum = rest.reduce(function(a,b){ return a + b[metric]; }, 0);
+    var items = top.map(function(r, i){ return { name:r.name, v:r[metric], c:COLORS[i] }; });
+    items.push({ name:'其他 13 个经济体', v:+restSum.toFixed(2), c:'#CBD5E1' });
+    var total = items.reduce(function(a,b){ return a+b.v; }, 0);
+    var cx = 190, cy = 190, R = 150, a0 = -Math.PI/2;
+    var s = '<svg viewBox="0 0 700 400" width="700" height="400">';
+    items.forEach(function(it){
+      var a1 = a0 + it.v/total * Math.PI*2;
+      var x0 = cx + R*Math.cos(a0), y0 = cy + R*Math.sin(a0);
+      var x1 = cx + R*Math.cos(a1), y1 = cy + R*Math.sin(a1);
+      var large = (a1-a0) > Math.PI ? 1 : 0;
+      s += '<path d="M' + cx + ',' + cy + ' L' + x0.toFixed(1) + ',' + y0.toFixed(1) +
+           ' A' + R + ',' + R + ' 0 ' + large + ' 1 ' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' Z" fill="' +
+           it.c + '" stroke="#fff" stroke-width="1.6"></path>';
+      if(it.v/total > 0.045){
+        var am = (a0+a1)/2;
+        s += '<text x="' + (cx + R*0.66*Math.cos(am)).toFixed(1) + '" y="' +
+             (cy + R*0.66*Math.sin(am)).toFixed(1) + '" font-size="12" fill="#fff" text-anchor="middle" ' +
+             'font-weight="700">' + (it.v/total*100).toFixed(1) + '%</text>';
+      }
+      a0 = a1;
+    });
+    items.forEach(function(it, i){
+      var y = 44 + i*36;
+      s += '<rect x="370" y="' + (y-11) + '" width="14" height="14" rx="3" fill="' + it.c + '"></rect>';
+      s += '<text x="392" y="' + y + '" font-size="13" fill="#334155">' + esc(it.name) + '　' +
+           it.v + '　' + (it.v/total*100).toFixed(1) + '%</text>';
+    });
+    s += '</svg>';
+    document.getElementById('chartbox').innerHTML = s;
+    var t0 = items[0];
+    setInsight('饼图看的是<b>比例</b>：' + esc(t0.name) + ' 占 APEC 21 个经济体' + METRIC[metric] +
+      '总量的 <b>' + (t0.v/total*100).toFixed(1) + '%</b>。' +
+      '注意：饼图的区块不宜过多，所以这里只显示前 8 名，其余合并为“其他”。');
+  }
+
+  function renderScatter(){
+    var W = 700, H = 420, padL = 70, padB = 52, padT = 22, padR = 24;
+    var maxPop = Math.max.apply(null, DATA.map(function(d){ return d.pop; }));
+    var maxGdp = Math.max.apply(null, DATA.map(function(d){ return d.gdp; }));
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">';
+    for(var g=0; g<=5; g++){
+      var y = padT + (H-padB-padT)*g/5;
+      var x = padL + (W-padL-padR)*g/5;
+      s += '<line x1="' + padL + '" y1="' + y + '" x2="' + (W-padR) + '" y2="' + y + '" stroke="#E2E8F0"></line>';
+      s += '<line x1="' + x + '" y1="' + padT + '" x2="' + x + '" y2="' + (H-padB) + '" stroke="#F1F5F9"></line>';
+      s += '<text x="' + (padL-8) + '" y="' + (y+4) + '" text-anchor="end" font-size="11" fill="#94A3B8">' +
+           (maxGdp*(1-g/5)).toFixed(1) + '</text>';
+      s += '<text x="' + x + '" y="' + (H-padB+18) + '" text-anchor="middle" font-size="11" fill="#94A3B8">' +
+           (maxPop*g/5).toFixed(1) + '</text>';
+    }
+    s += '<text x="' + (W/2) + '" y="' + (H-14) + '" text-anchor="middle" font-size="12.5" fill="#475569">人口（亿）</text>';
+    s += '<text x="16" y="' + (H/2) + '" font-size="12.5" fill="#475569" transform="rotate(-90 16 ' + (H/2) + ')">GDP（万亿美元）</text>';
+    DATA.forEach(function(d){
+      var x = padL + d.pop/maxPop*(W-padL-padR);
+      var y = padT + (1 - d.gdp/maxGdp)*(H-padB-padT);
+      var isCN = d.name === '中国';
+      s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (isCN?9:6) +
+           '" fill="' + (isCN?'#DC2626':'rgba(2,132,199,.72)') + '" stroke="#fff" stroke-width="1.6"></circle>';
+      if(['美国','中国','日本','印度尼西亚','新加坡','中国香港','文莱'].indexOf(d.name) >= 0){
+        s += '<text x="' + (x+10).toFixed(1) + '" y="' + (y+4).toFixed(1) + '" font-size="11.5" fill="#334155">' +
+             esc(d.name) + '</text>';
+      }
+    });
+    s += '</svg>';
+    document.getElementById('chartbox').innerHTML = s;
+    setInsight('散点图看的是<b>关系</b>：横轴人口、纵轴 GDP。多数点大致从左下到右上，'
+      + '说明“人口多的经济体，GDP 往往也高”；但<b>中国</b>在最右侧（人口最多），'
+      + '<b>美国</b>在最上方（GDP 最高）——人口多不等于 GDP 一定最高。');
+  }
+
+  function setInsight(html){ document.getElementById('insight').innerHTML = '💡 ' + html; }
+
+  function draw(){
+    if(chart === 'bar') renderBar();
+    else if(chart === 'col') renderCol();
+    else if(chart === 'pie') renderPie();
+    else renderScatter();
+  }
+
+  /* ---------------- 控件 ---------------- */
+  document.querySelectorAll('[data-metric]').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('[data-metric]').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on'); metric = b.getAttribute('data-metric');
+      if(chart === 'scatter') chart = 'bar', syncChips();
+      draw();
+    });
+  });
+  document.querySelectorAll('[data-chart]').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('[data-chart]').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on'); chart = b.getAttribute('data-chart');
+      if(chart === 'scatter'){
+        document.querySelectorAll('[data-metric]').forEach(function(x){
+          x.classList.toggle('on', x.getAttribute('data-metric') === 'gdp');
+        });
+      }
+      draw();
+    });
+  });
+  function syncChips(){
+    document.querySelectorAll('[data-chart]').forEach(function(x){
+      x.classList.toggle('on', x.getAttribute('data-chart') === chart);
+    });
+  }
+
+  /* ---------------- 数据表 ---------------- */
+  function renderTable(){
+    var rows = rowsBy(sortK, sortDir);
+    var body = document.querySelector('#dtable tbody');
+    body.innerHTML = rows.map(function(r){
+      return '<tr><td>' + esc(r.name) + '</td><td>' + r.gdp + '</td><td>' + r.pop +
+             '</td><td>' + r.trade + '</td><td>' + r.per + '</td></tr>';
+    }).join('');
+  }
+  document.querySelectorAll('#dtable thead th').forEach(function(th){
+    th.addEventListener('click', function(){
+      var k = th.getAttribute('data-k');
+      if(sortK === k) sortDir = -sortDir; else { sortK = k; sortDir = -1; }
+      renderTable();
+      document.querySelectorAll('#dtable thead th').forEach(function(x){
+        x.textContent = x.textContent.replace(/[ ↑↓]+$/, '');
+      });
+      th.textContent += sortDir < 0 ? ' ↓' : ' ↑';
+    });
+  });
+
+  /* ---------------- 图表匹配小游戏 ---------------- */
+  var QS = [
+    { q:'美国和中国的贸易额，谁更高？', a:'柱状图',
+      fb:'两两比大小，柱状图最直观——一根柱子高一根柱子矮，一眼就看出来。' },
+    { q:'中国 GDP 占 APEC 21 个经济体总量的比例是多少？', a:'饼图',
+      fb:'“部分占整体的百分之几”，用饼图最合适。' },
+    { q:'人口多的经济体，GDP 一定高吗？', a:'散点图',
+      fb:'要看两个变量之间有没有关系，用散点图：横轴人口、纵轴 GDP。' },
+    { q:'21 个经济体里，谁的人口最多？', a:'柱状图',
+      fb:'多个对象的数量排序，还是柱状图（横向条形图）最好用。' },
+    { q:'某个经济体过去 10 年的 GDP 是怎么变化的？', a:'折线图',
+      fb:'随时间变化的趋势，用折线图。本实验里的数据没有时间维度，所以没有这个图哦。' }
+  ];
+  var TYPES = ['柱状图','饼图','折线图','散点图'];
+  var qbox = document.getElementById('quizbox');
+  QS.forEach(function(item, i){
+    var d = document.createElement('div');
+    d.className = 'q';
+    d.innerHTML = '<p>Q' + (i+1) + '. ' + item.q + '</p><div class="opts">' +
+      TYPES.map(function(t){ return '<button class="opt" data-t="' + t + '">' + t + '</button>'; }).join('') +
+      '</div><div class="fb"></div>';
+    var done = false;
+    d.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(done) return; done = true;
+        var pick = btn.getAttribute('data-t');
+        var ok = pick === item.a;
+        btn.classList.add(ok ? 'ok' : 'no');
+        if(!ok) d.querySelectorAll('.opt').forEach(function(o){
+          if(o.getAttribute('data-t') === item.a) o.classList.add('ok');
+        });
+        var fb = d.querySelector('.fb');
+        fb.classList.add('show', ok ? 'ok' : 'no');
+        fb.textContent = (ok ? '✅ 答对了！' : '❌ 正确答案是「' + item.a + '」。') + item.fb;
+      });
+    });
+    qbox.appendChild(d);
+  });
+
+  /* ---------------- AI Prompt ---------------- */
+  function dataText(list){
+    return list.map(function(d){
+      return d.name + ' GDP ' + d.gdp + ' 万亿美元、人口 ' + d.pop + ' 亿、贸易额 ' + d.trade + ' 万亿美元';
+    }).join('；\n');
+  }
+  var allText = dataText(DATA);
+  var smallText = dataText(DATA.slice(0, 5));
+  document.getElementById('aiprompt').textContent =
+    '请帮我分析下面这组 APEC 经济体数据，找出 3 个有趣的趋势或规律，并说明每条结论的依据。\n\n' +
+    '数据（2023 年近似值，来源：世界银行 / APEC 官网）：\n' + allText +
+    '\n\n要求：1. 每条结论都要指出对应哪些经济体；2. 如果你不确定，请明确说明；' +
+    '3. 不要编造数据表中没有的数字。';
+
+  document.getElementById('btnCopy').addEventListener('click', function(){
+    copy(document.getElementById('aiprompt').textContent, this);
+  });
+  document.getElementById('btnCopySmall').addEventListener('click', function(){
+    var t = '请帮我分析下面这组 APEC 经济体数据，找出 3 个有趣的趋势或规律。\n\n' +
+      '数据：' + smallText + '\n\n要求：说明每条结论的依据，不要编造数据。';
+    copy(t, this);
+  });
+  function copy(text, btn){
+    var old = btn.textContent;
+    var done = function(){ btn.textContent = '✅ 已复制'; setTimeout(function(){ btn.textContent = old; }, 1700); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fb(text, done); });
+    } else fb(text, done);
+  }
+  function fb(text, cb){
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); cb(); }catch(e){ alert('请手动复制'); }
+    document.body.removeChild(ta);
+  }
+
+  /* ---------------- 启动 ---------------- */
+  renderTable(); draw();
+})();
+</script>
+<div style="text-align:center;font-size:12.5px;color:#8892A0;line-height:1.9;padding:16px 14px 24px">设计与编制：帅颖　·　深圳大学附属教育集团外国语中学</div>
+</body>
+</html>
